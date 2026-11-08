@@ -1,6 +1,6 @@
 ---
 title: Parser
-layer: modules
+layer: whitelist
 component: core
 kind: module
 links:

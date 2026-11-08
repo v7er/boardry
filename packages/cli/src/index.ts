@@ -15,6 +15,13 @@ program
   .description("The document centre for your product")
   .version("0.1.0");
 
+let boardyPath: string | undefined;
+
+program.hook("preAction", (_thisCommand, actionCommand) => {
+  const opts = actionCommand.opts() as { path?: string };
+  boardyPath = opts.path;
+});
+
 const DEFAULT_LAYERS = "brief,components,prototypes,modules,technical,whitelist";
 
 function slugify(value: string): string {
@@ -46,7 +53,7 @@ function editLinks(
 }
 
 async function loadOrFail() {
-  const loaded = await loadKnowledge(process.cwd());
+  const loaded = await loadKnowledge(process.cwd(), boardyPath);
   if (!loaded) {
     console.error(chalk.red("No .boardy/ folder found. Run `boardy init` first."));
     process.exit(1);
@@ -55,7 +62,7 @@ async function loadOrFail() {
 }
 
 async function boardyDirOrFail() {
-  const dir = await findBoardyDir(process.cwd());
+  const dir = await findBoardyDir(process.cwd(), boardyPath);
   if (!dir) {
     console.error(chalk.red("No .boardy/ folder found. Run `boardy init` first."));
     process.exit(1);
@@ -77,14 +84,26 @@ program
   .description("set up .boardy/ with index.md, .gitignore, and starter notes")
   .option("--layers <names>", "comma-separated layer list", DEFAULT_LAYERS)
   .action(async (opts: { layers: string }) => {
-    const root = process.cwd();
-    const boardyDir = path.join(root, ".boardy");
+    const boardyDir = boardyPath ? path.resolve(boardyPath) : path.join(process.cwd(), ".boardy");
     const layers = opts.layers.split(",").map((s) => s.trim()).filter(Boolean);
 
     await fs.mkdir(boardyDir, { recursive: true });
     const indexMd = `---\ntitle: Layers\nlayers:\n${layers.map((l) => `  - ${l}`).join("\n")}\n---\n`;
     await fs.writeFile(path.join(boardyDir, "index.md"), indexMd);
     await fs.writeFile(path.join(boardyDir, ".gitignore"), ".index/\n");
+
+    for (const layer of layers) {
+      const layerDir = path.join(boardyDir, layer);
+      await fs.mkdir(layerDir, { recursive: true });
+      const layerIndex = path.join(layerDir, "index.md");
+      try {
+        await fs.access(layerIndex);
+      } catch {
+        const title = layer.charAt(0).toUpperCase() + layer.slice(1);
+        await fs.writeFile(layerIndex, `# ${title}\n\nWhat this layer holds.\n`);
+      }
+    }
+
     console.log(chalk.green(`Initialized ${boardyDir} with ${layers.length} layers: ${layers.join(", ")}`));
   });
 
@@ -479,5 +498,9 @@ fetch('data.json').then(function (r) { return r.json(); }).then(function (d) {
 </script>
 </body>
 </html>`;
+
+for (const command of program.commands) {
+  command.option("--path <dir>", "boardy folder to use (default: .boardy)");
+}
 
 program.parseAsync(process.argv);

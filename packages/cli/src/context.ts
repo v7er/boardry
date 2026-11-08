@@ -8,7 +8,23 @@ export interface LoadedKnowledge {
   result: BuildResult;
 }
 
-export async function findBoardyDir(start: string): Promise<string | null> {
+async function hasIndex(dir: string): Promise<boolean> {
+  try {
+    return (await fs.stat(path.join(dir, "index.md"))).isFile();
+  } catch {
+    return false;
+  }
+}
+
+export async function findBoardyDir(start: string, explicit?: string): Promise<string | null> {
+  if (explicit) {
+    const abs = path.resolve(explicit);
+    if (await hasIndex(abs)) return abs;
+    const nested = path.join(abs, ".boardy");
+    if (await hasIndex(nested)) return nested;
+    return null;
+  }
+
   let current = path.resolve(start);
   for (;;) {
     const candidate = path.join(current, ".boardy");
@@ -24,8 +40,8 @@ export async function findBoardyDir(start: string): Promise<string | null> {
   }
 }
 
-export async function loadKnowledge(start: string): Promise<LoadedKnowledge | null> {
-  const dir = await findBoardyDir(start);
+export async function loadKnowledge(start: string, explicit?: string): Promise<LoadedKnowledge | null> {
+  const dir = await findBoardyDir(start, explicit);
   if (!dir) return null;
 
   const indexPath = path.join(dir, "index.md");
@@ -36,7 +52,13 @@ export async function loadKnowledge(start: string): Promise<LoadedKnowledge | nu
     indexMd = "";
   }
 
-  const files = await fg("**/*.md", { cwd: dir, dot: true, ignore: ["index.md", "**/.index/**", "**/node_modules/**"] });
+  const files = (
+    await fg("**/*.md", {
+      cwd: dir,
+      dot: true,
+      ignore: ["**/README.md", "**/.index/**", "**/node_modules/**"],
+    })
+  ).filter((file) => path.basename(file).toLowerCase() !== "index.md");
   const notes: { path: string; content: string }[] = [];
   for (const file of files) {
     const content = await fs.readFile(path.join(dir, file), "utf8");

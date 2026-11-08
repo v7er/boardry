@@ -1,0 +1,12 @@
+.boardy-node {
+  position: relative;
+}
+
+.boardy-node .collapse-dot {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.boardy-node:hover .collapse-dot {
+  opacity: 1;
+}

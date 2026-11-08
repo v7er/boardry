@@ -1,0 +1,86 @@
+:root {
+  --mantine-color-body: #ffffff;
+  --boardy-sidebar-bg: #f6f6f7;
+  --mantine-color-default-border: rgba(0, 0, 0, 0.07);
+}
+
+:root[data-mantine-color-scheme="light"] {
+  --mantine-color-body: #ffffff;
+  --boardy-sidebar-bg: #f6f6f7;
+  --mantine-color-default-border: rgba(0, 0, 0, 0.07);
+}
+
+:root[data-mantine-color-scheme="dark"] {
+  --mantine-color-body: #000000;
+  --boardy-sidebar-bg: #1c1c1f;
+  --mantine-color-default-border: rgba(255, 255, 255, 0.08);
+}
+
+/* Content pane keeps the pure background. */
+body,
+.mantine-AppShell-main {
+  background: var(--mantine-color-body);
+}
+
+/* Chrome: header and sidebars share the sidebar tone. */
+.mantine-AppShell-header,
+.boardy-sidebar {
+  background: var(--boardy-sidebar-bg);
+}
+
+.mantine-AppShell-header,
+.mantine-Drawer-header,
+.mantine-Modal-header {
+  border-width: 1px;
+  border-color: var(--mantine-color-default-border);
+}
+
+[data-mantine-color-scheme="light"] .react-flow {
+  --xy-controls-button-background-color: #ffffff;
+  --xy-controls-button-background-color-hover: #f1f1f3;
+  --xy-controls-button-color: #2b2b2e;
+  --xy-controls-button-color-hover: #000000;
+  --xy-controls-button-border-color: rgba(0, 0, 0, 0.08);
+  --xy-minimap-background-color: #ffffff;
+  --xy-minimap-mask-background-color: rgba(0, 0, 0, 0.08);
+  --xy-minimap-node-background-color: #d9d9de;
+}
+
+[data-mantine-color-scheme="dark"] .react-flow {
+  --xy-controls-button-background-color: #1c1c1f;
+  --xy-controls-button-background-color-hover: #26262a;
+  --xy-controls-button-color: #d4d4d8;
+  --xy-controls-button-color-hover: #ffffff;
+  --xy-controls-button-border-color: rgba(255, 255, 255, 0.08);
+  --xy-minimap-background-color: #1c1c1f;
+  --xy-minimap-mask-background-color: rgba(0, 0, 0, 0.35);
+  --xy-minimap-node-background-color: #3a3a40;
+}
+
+.react-flow__controls {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.react-flow__minimap {
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.react-flow__edge-path,
+.react-flow__connection-path {
+  stroke-width: 1.5px;
+}
+
+/* Drawers and modals open on the sidebar tone. */
+[role="dialog"] {
+  background: var(--boardy-sidebar-bg);
+}
+
+/* The markdown editor sits on the drawer/IDE surface, not on its own color. */
+.mdxeditor,
+.mdxeditor-root-contenteditable,
+.mdxeditor-toolbar {
+  background: transparent;
+}

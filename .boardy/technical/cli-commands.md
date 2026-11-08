@@ -1,6 +1,6 @@
 ---
 title: CLI commands
-layer: prototypes
+layer: technical
 component: cli
 kind: interface
 links:

@@ -1,0 +1,3 @@
+# Whitelist
+
+The allowed stack.

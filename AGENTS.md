@@ -64,9 +64,7 @@ This is the allowed stack. The packages publish under the `@boardy` scope (`@boa
 - Vite
 - @xyflow/react
 - d3-force
-- @uiw/react-codemirror
-- @codemirror/lang-markdown
-- @codemirror/lang-yaml
+- @mdxeditor/editor
 - react-markdown
 - remark-gfm
 - remark-wiki-link

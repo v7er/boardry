@@ -43,6 +43,18 @@ A single Node CLI, `boardy`, that reads and writes the `.boardy/` folder. It sha
 - `boardy serve` - a local read-only graph viewer, no Tauri needed.
 - `boardy --version`.
 
+### Any folder
+
+Every command takes `--path <dir>` to use a folder other than `.boardy`. Point it at either the notes folder or a project root that contains `.boardy`:
+
+```bash
+boardy index --path .boardy-example
+boardy check --path .boardy-example
+boardy ask "where are tasks stored" --path .boardy-example
+```
+
+The repo ships a runnable sample in `.boardy-example/`.
+
 ## Behavior
 
 - `boardy ask`, `boardy search`, `boardy layers`, and `boardy fit` are deterministic. They never call a model and never need a key.

@@ -46,13 +46,16 @@ export function buildKnowledge(indexMd: string, inputs: NoteInput[]): BuildResul
       component: fm.component,
       kind: fm.kind,
       type: fm.type,
+      summary: fm.summary,
+      icon: fm.icon,
       tags: fm.tags ?? [],
       links: fm.links ?? [],
       wikilinks,
       body,
       raw: input.content,
     };
-    if (note.type === "brainstorming") {
+    const basename = input.path.split("/").pop() ?? input.path;
+    if (note.type === "brainstorming" || basename.startsWith("_")) {
       brainstorming.push(note);
     } else {
       notes.push(note);

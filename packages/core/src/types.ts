@@ -3,6 +3,11 @@ export interface NoteLink {
   target: string;
 }
 
+export interface NoteIcon {
+  name?: string;
+  color?: string;
+}
+
 export interface Note {
   id: string;
   path: string;
@@ -11,6 +16,8 @@ export interface Note {
   component?: string;
   kind?: string;
   type?: string;
+  summary?: string;
+  icon?: NoteIcon;
   tags: string[];
   links: NoteLink[];
   wikilinks: string[];

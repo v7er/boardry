@@ -4,54 +4,77 @@ The desktop app. All features, requirements, and tech for Studio.
 
 ## What it is
 
-A local desktop app, built with Tauri. It draws `.boardy/` as a graph and lets you edit notes directly on it. No server, no account: everything runs on your machine.
+A local desktop app, built with Tauri. It opens a `.boardy/` folder, draws its notes as a layered graph, and lets you read, create, and edit notes. No server, no account: everything runs on your machine.
 
 ## Open a folder
 
-- You open a folder that is `.boardy/` itself, or the project root that contains it.
-- Studio auto-discovers `.boardy/index.md`.
-- If the folder is not indexed yet, Studio starts indexing when it opens.
-- Studio also ensures `.boardy/.gitignore` exists, so the index stays out of git.
+- Open either the project root (which contains `.boardy/`) or the `.boardy/` folder itself.
+- Studio finds `.boardy/index.md` either way.
+- It reads the layers from `index.md`; nothing about the layer set is hardcoded.
+- `.boardy/.index/` is the derived index and stays out of git.
 
-The notes live in `.boardy/`, not in a separate index folder. The derived index sits inside `.boardy/.index/`, ignored by git.
+## Views
 
-## Graph view
+Two views over the same folder. Switch from the header.
 
-- A lightweight graph UI, fast to move around and nice to look at.
-- Click a node to expand it and see everything it links to.
-- Nodes are colored by layer and sized by how connected they are.
-- The layers stack as a waterfall, with LayerAI wrapping the outside.
+### Graph view
 
-## Fast navigation
+- The layers stack as a horizontal waterfall, one band per layer.
+- A dashed separator line and the layer name mark each band.
+- Nodes are colored by layer.
+- Only the hierarchical parent link is drawn (`refines` / `part_of`), as an orthogonal polyline. Other links stay in the markdown and are not drawn.
+- A **(+)** button on each node creates a child node, linked to it with `refines`.
+- Click a node to expand it; click the summary to open the editor.
+- Dragging a node snaps it vertically to the nearest layer band, and the band highlights. Dropping it there files the note under that layer; horizontal movement stays free.
 
-- `Cmd-K` opens a command palette for fast navigation and commands.
-- Fast full-text search across all notes.
+### IDE view
 
-## Edit directly in the graph
+- A small IDE: a file tree on the left and a markdown editor on the right.
+- The tree groups notes by layer.
+- The editor is CodeMirror with markdown and frontmatter support.
+- Save writes the note back and refreshes the graph.
 
-- Click a node to open a floating panel on the right.
-- Start editing the note right there; the node updates live.
-- Drag between two nodes to link them, or type `[[wikilink]]` in the body.
+## Create a node
 
-## Editor
+- **+** on a node in the graph opens the new-node dialog for a child of that node.
+- Enter a name and, optionally, the content.
+- The layer is inferred from the node you created from. There is no layer picker, and no kind or component field.
+- Studio writes `.boardy/<layer>/<slug>.md`, links it to the parent with `refines`, and opens it.
 
-- Markdown editor with live preview.
-- Autocomplete for layers, verbs, and component names.
-- A "what points here" panel of backlinks.
+## Edit a note
 
-## AI assistant (configured once)
+- In the graph, click a node to open the editor drawer.
+- In the IDE view, pick a note from the tree and edit it inline.
+- Save writes the markdown file; the graph reloads.
 
-- A settings panel: provider (OpenAI-compatible, Anthropic, or a local server), model, and key.
-- The assistant works over the notes you have written: it suggests links, flags a note that belongs in a different layer, and summarizes a group of notes.
-- It never writes a note for you, and it ignores `type: brainstorming` notes.
+## Find things
+
+- `Cmd-K` / `Ctrl-K` opens the command palette.
+- Fast full-text search over every note.
+- Selecting a result opens the note.
+
+## AI
+
+- **AI settings**: base URL, API key, model.
+  - On open, it auto-detects provider env vars (`OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `DEEPSEEK_API_KEY`, `GROQ_API_KEY`) and their `*_BASE_URL` / `*_MODEL`.
+  - **Auto-fill from env** refills the key, base URL, and model from the environment.
+  - **Fetch models** lists the provider's models for the model picker.
+- **Chat**: a side panel. The prompt is sent with the top matching notes as context. It answers from `.boardy` and says when a note does not cover something.
+- Brainstorming notes (`type: brainstorming`) are ignored by the graph and by AI.
+
+## The interface
+
+- Light and dark theme, following the OS by default, with a toggle.
+- Auto refresh: Studio polls the folder and reloads when notes change on disk.
+- Notes are colored by layer; the layer name labels each band.
 
 ## Tech
 
 - Tauri 2 with `@tauri-apps/api`.
-- Plugins: `plugin-fs` (read and write notes), `plugin-dialog`, `plugin-store` (AI settings), `plugin-shell`.
+- Plugins: `plugin-dialog` (folder picker), `plugin-fs`, `plugin-shell`.
+- File access for `.boardy/` goes through Rust commands (`load_boardy`, `save_note`) so hidden folders and any location work.
+- AI calls go through Rust (`detect_ai_env`, `list_models`, `chat`) with `reqwest`, so there is no browser CORS limit.
 - React 19 with TypeScript, built by Vite.
-- `@xyflow/react` (React Flow) for the graph, `d3-force` for the layout.
-- `@uiw/react-codemirror` with `@codemirror/lang-markdown` and `@codemirror/lang-yaml`.
-- `react-markdown` with `remark-gfm` and `remark-wiki-link` for preview.
-- `zustand` for state.
-- `@mantine/core`, `@mantine/hooks`, `@mantine/form`, `@mantine/notifications`, and `@tabler/icons-react` for the interface.
+- `@xyflow/react` (React Flow) for the graph.
+- `@mantine/core`, `@mantine/hooks`, and `@tabler/icons-react` for the interface.
+- `@uiw/react-codemirror`, `@codemirror/lang-markdown`, and `@codemirror/lang-yaml` for the IDE editor.
