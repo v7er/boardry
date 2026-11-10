@@ -396,6 +396,7 @@ export default function App() {
               <GraphView
                 result={result}
                 boardyDir={boardyDir}
+                files={files}
                 onSelect={setSelectedId}
                 onCreateChild={(id) => openNewNoteFor(id)}
                 onMoved={reloadActive}

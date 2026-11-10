@@ -46,6 +46,9 @@ fn collect_notes(root: &Path, dir: &Path, out: &mut Vec<BoardyNote>) -> Result<(
         }
         let path = entry.path();
         if path.is_dir() {
+            if name == "questions" {
+                continue;
+            }
             collect_notes(root, &path, out)?;
         } else if name.ends_with(".md") && name != "index.md" {
             let rel = path

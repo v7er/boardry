@@ -1,0 +1,22 @@
+[
+  { "question": "what status does a zip publish set", "expect": "zip-publish-status" },
+  { "question": "what status does a zip publish use", "expect": "zip-publish-status" },
+  { "question": "how does resume work", "expect": "resume" },
+  { "question": "how does a session resume", "expect": "resume" },
+  { "question": "what happens when a session finishes", "expect": "session-finish" },
+  { "question": "what happens on finish", "expect": "session-finish" },
+  { "question": "why quickjs", "expect": "quickjs" },
+  { "question": "why is quickjs used", "expect": "quickjs" },
+  { "question": "how are leaderboards scoped", "expect": "leaderboard-scope" },
+  { "question": "what does a leaderboard cover", "expect": "leaderboard-scope" },
+  { "question": "how do webhooks work", "expect": "webhooks" },
+  { "question": "how are webhooks signed", "expect": "webhooks" },
+  { "question": "how does the sdk identify a player", "expect": "player-identity" },
+  { "question": "how does the sdk identify players", "expect": "player-identity" },
+  { "question": "how does tenancy work", "expect": "tenancy" },
+  { "question": "what is a space", "expect": "tenancy" },
+  { "question": "what stack is allowed", "expect": "stack" },
+  { "question": "how is openapi generated", "expect": "openapi" },
+  { "question": "how do refunds work", "expect": null },
+  { "question": "what is the capital of France", "expect": null }
+]

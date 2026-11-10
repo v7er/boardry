@@ -28,7 +28,7 @@ import { IconPlus } from "@tabler/icons-react";
 import { SmartEdgeProvider, createSmartEdge } from "@tisoap/react-flow-smart-edge";
 import type { BuildResult, Note } from "@boardy/core";
 import { moveNote, setLayer } from "./boardy";
-import { AskBox } from "./AskBox";
+import { CommandBox } from "./CommandBox";
 import { NodeIcon } from "./NodeIcon";
 import { defaultIconFor } from "./icons";
 import "./graph.css";
@@ -50,7 +50,7 @@ function truncate(text: string): string {
   return text.length > PREVIEW_LIMIT ? `${text.slice(0, PREVIEW_LIMIT)}...` : text;
 }
 
-const NODE_GAP = 16;
+const NODE_GAP = 44;
 
 function rectsOverlap(
   a: { x: number; y: number; w: number; h: number },
@@ -95,6 +95,44 @@ function avoidOverlaps(nodes: BoardyNode[]): BoardyNode[] {
     return rect.x === node.position.x && rect.y === node.position.y
       ? node
       : { ...node, position: { x: rect.x, y: rect.y } };
+  });
+}
+
+const LAYER_GAP = 40;
+
+/** Keep each layer box stacked below the previous one, in index.md order. */
+function stackLayers(nodes: BoardyNode[], layers: string[]): BoardyNode[] {
+  const boxes = new Map<string, { minY: number; maxY: number }>();
+  for (const node of nodes) {
+    const height = node.measured?.height ?? 56;
+    const current = boxes.get(node.data.layer);
+    boxes.set(
+      node.data.layer,
+      current
+        ? {
+            minY: Math.min(current.minY, node.position.y),
+            maxY: Math.max(current.maxY, node.position.y + height),
+          }
+        : { minY: node.position.y, maxY: node.position.y + height },
+    );
+  }
+
+  const shifts = new Map<string, number>();
+  let previousBottom: number | null = null;
+  for (const layer of layers) {
+    const box = boxes.get(layer);
+    if (!box) continue;
+    const top: number =
+      previousBottom === null ? box.minY : Math.max(box.minY, previousBottom + LAYER_GAP);
+    shifts.set(layer, top - box.minY);
+    previousBottom = top + (box.maxY - box.minY);
+  }
+
+  return nodes.map((node) => {
+    const shift = shifts.get(node.data.layer) ?? 0;
+    return shift === 0
+      ? node
+      : { ...node, position: { x: node.position.x, y: node.position.y + shift } };
   });
 }
 
@@ -300,7 +338,7 @@ function LayerBands({
   activeLayer: string | null;
   onLayerClick: (layer: string) => void;
 }) {
-  const PAD = 24;
+  const PAD = 14;
 
   // Bounds are in flow coordinates, so they only change when the chart changes
   // (node moved, resized, added or removed) — never on pan or zoom.
@@ -348,12 +386,12 @@ function LayerBands({
                 : "1px solid var(--mantine-color-default-border)",
               borderRadius: 10,
               background: active
-                ? "rgba(250, 204, 21, 0.16)"
+                ? "rgba(250, 204, 21, 0.2)"
                 : index % 2 === 0
-                  ? "rgba(127, 127, 127, 0.07)"
-                  : "rgba(127, 127, 127, 0.03)",
+                  ? "rgba(127, 127, 127, 0.12)"
+                  : "rgba(127, 127, 127, 0.05)",
               pointerEvents: "none",
-              zIndex: -1,
+              zIndex: 0,
               transition: "background 140ms ease",
             }}
           >
@@ -368,6 +406,7 @@ function LayerBands({
 export function GraphView({
   result,
   boardyDir,
+  files,
   onSelect,
   onCreateChild,
   onMoved,
@@ -376,6 +415,7 @@ export function GraphView({
 }: {
   result: BuildResult;
   boardyDir: string;
+  files: { path: string; content: string }[];
   onSelect: (id: string) => void;
   onCreateChild: (id: string) => void;
   onMoved: () => void;
@@ -490,25 +530,15 @@ export function GraphView({
     });
   }, [computedNodes, setNodes]);
 
-  const sizeSignature = useMemo(
-    () =>
-      nodes
-        .map((node) => `${node.id}:${node.measured?.width ?? 0}x${node.measured?.height ?? 0}`)
-        .join("|"),
-    [nodes],
-  );
-
   useEffect(() => {
     if (draggingRef.current) return;
     if (nodes.length === 0) return;
     if (nodes.some((node) => !node.measured?.width)) return;
-    const resolved = avoidOverlaps(nodes);
+    const resolved = stackLayers(avoidOverlaps(nodes), result.layers);
     if (resolved.some((node, index) => node !== nodes[index])) {
       setNodes(resolved);
     }
-    // Re-run only when a node's size changes (expand/collapse), never on drags.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sizeSignature]);
+  }, [nodes, setNodes, result.layers]);
 
   const toggle = useCallback((id: string) => {
     setExpanded((prev) => {
@@ -623,7 +653,7 @@ export function GraphView({
             <Controls />
             <MiniMap pannable zoomable position="bottom-right" />
             <Panel position="top-left">
-              <AskBox result={result} onOpen={onSelect} />
+              <CommandBox result={result} files={files} onOpen={onSelect} />
             </Panel>
             <Panel position="top-right">
               <Group gap="xs">

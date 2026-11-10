@@ -48,6 +48,8 @@ export function buildKnowledge(indexMd: string, inputs: NoteInput[]): BuildResul
       type: fm.type,
       summary: fm.summary,
       icon: fm.icon,
+      source: input.source ?? "boardy",
+      updated: fm.updated,
       tags: fm.tags ?? [],
       links: fm.links ?? [],
       wikilinks,
@@ -66,4 +68,20 @@ export function buildKnowledge(indexMd: string, inputs: NoteInput[]): BuildResul
   const search = buildSearchIndex(notes);
 
   return { layers, notes, brainstorming, graph, search, errors };
+}
+
+/** Add notes from another source (OpenWiki evidence) to an existing result. */
+export function mergeKnowledge(result: BuildResult, extra: Note[]): BuildResult {
+  const layers = result.layers.includes("evidence")
+    ? result.layers
+    : [...result.layers, "evidence"];
+  const notes = [...result.notes, ...extra];
+  return {
+    layers,
+    notes,
+    brainstorming: result.brainstorming,
+    graph: buildGraph(notes),
+    search: buildSearchIndex(notes),
+    errors: result.errors,
+  };
 }

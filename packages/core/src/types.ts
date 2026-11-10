@@ -8,6 +8,13 @@ export interface NoteIcon {
   color?: string;
 }
 
+export interface NoteEvidence {
+  path: string;
+  line: number;
+}
+
+export type NoteSource = "boardy" | "openwiki";
+
 export interface Note {
   id: string;
   path: string;
@@ -18,6 +25,9 @@ export interface Note {
   type?: string;
   summary?: string;
   icon?: NoteIcon;
+  source?: NoteSource;
+  updated?: string;
+  evidence?: NoteEvidence[];
   tags: string[];
   links: NoteLink[];
   wikilinks: string[];
@@ -28,4 +38,5 @@ export interface Note {
 export interface NoteInput {
   path: string;
   content: string;
+  source?: NoteSource;
 }

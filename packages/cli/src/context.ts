@@ -1,7 +1,16 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import fg from "fast-glob";
-import { buildKnowledge, type BuildResult, type Note } from "@boardy/core";
+import {
+  buildKnowledge,
+  isOpenWikiPage,
+  parseOpenWikiPage,
+  parseQaEntry,
+  type BuildResult,
+  type Note,
+  type OpenWikiPage,
+  type QaEntry,
+} from "@boardy/core";
 
 export interface LoadedKnowledge {
   dir: string;
@@ -56,7 +65,7 @@ export async function loadKnowledge(start: string, explicit?: string): Promise<L
     await fg("**/*.md", {
       cwd: dir,
       dot: true,
-      ignore: ["**/README.md", "**/.index/**", "**/node_modules/**"],
+      ignore: ["**/README.md", "**/.index/**", "**/node_modules/**", "**/questions/**"],
     })
   ).filter((file) => path.basename(file).toLowerCase() !== "index.md");
   const notes: { path: string; content: string }[] = [];
@@ -72,4 +81,56 @@ export async function loadKnowledge(start: string, explicit?: string): Promise<L
 export function findNote(result: BuildResult, query: string): Note | undefined {
   const q = query.replace(/\.md$/, "").replace(/^\.?boardy\//, "");
   return result.notes.find((n) => n.id === q) ?? result.notes.find((n) => n.id.split("/").pop() === q);
+}
+
+export interface LoadedOpenWiki {
+  dir: string;
+  pages: OpenWikiPage[];
+}
+
+/** Read the verified question index from `<boardyDir>/questions/`. */
+export async function loadQaEntries(boardyDir: string): Promise<QaEntry[]> {
+  const dir = path.join(boardyDir, "questions");
+  let files: string[] = [];
+  try {
+    files = await fg("*.md", { cwd: dir, dot: false });
+  } catch {
+    return [];
+  }
+  const entries: QaEntry[] = [];
+  for (const file of files) {
+    const content = await fs.readFile(path.join(dir, file), "utf8");
+    const entry = parseQaEntry(file, content);
+    if (entry) entries.push(entry);
+  }
+  return entries;
+}
+
+/** Read an OpenWiki folder (sibling of the boardy folder by default). */
+export async function loadOpenWiki(
+  boardyDir: string,
+  explicit?: string,
+): Promise<LoadedOpenWiki | null> {
+  const dir = explicit ? path.resolve(explicit) : path.join(path.dirname(boardyDir), "openwiki");
+
+  let isDir = false;
+  try {
+    isDir = (await fs.stat(dir)).isDirectory();
+  } catch {
+    isDir = false;
+  }
+  if (!isDir) return null;
+
+  const files = await fg("**/*.md", {
+    cwd: dir,
+    dot: false,
+    ignore: ["**/.*/**", "**/node_modules/**"],
+  });
+  const pages: OpenWikiPage[] = [];
+  for (const file of files) {
+    if (!isOpenWikiPage(file)) continue;
+    const content = await fs.readFile(path.join(dir, file), "utf8");
+    pages.push(parseOpenWikiPage(file, content));
+  }
+  return { dir, pages };
 }

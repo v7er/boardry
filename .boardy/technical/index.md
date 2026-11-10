@@ -1,3 +1,3 @@
 # Technical
 
-Decisions and constraints behind the build. Trade-offs worth remembering.
+Decisions and conventions. The why behind the build, and the edges between parts.

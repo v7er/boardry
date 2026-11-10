@@ -1,3 +1,3 @@
 # Prototypes
 
-How a component should look and behave. Flows, screens, and interaction.
+The concrete shape of a component: a command surface, a set of views, a data format.

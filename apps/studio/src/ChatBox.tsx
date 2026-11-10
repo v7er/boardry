@@ -1,23 +1,12 @@
 import { useState } from "react";
 import { Button, Drawer, Group, Loader, ScrollArea, Stack, Text, Textarea } from "@mantine/core";
+import { buildRagContext, type BuildResult } from "@boardy/core";
 import { chat, type AiSettings, type ChatMessage } from "./ai";
-import type { BuildResult } from "@boardy/core";
 
 interface UiMessage {
   role: "user" | "assistant";
   content: string;
   reasoning?: string | null;
-}
-
-function buildContext(result: BuildResult, prompt: string): string {
-  const hits = result.search.search(prompt, { prefix: true }).slice(0, 5);
-  const parts: string[] = [];
-  for (const hit of hits) {
-    const note = result.notes.find((n) => n.id === hit.id);
-    if (!note) continue;
-    parts.push(`## ${note.title} (${note.layer ?? "note"})\n${note.body.slice(0, 700)}`);
-  }
-  return parts.join("\n\n");
 }
 
 export function ChatBox({
@@ -47,14 +36,23 @@ export function ChatBox({
     setMessages(next);
     setSending(true);
     try {
-      const context = result ? buildContext(result, prompt) : "";
+      const context = result ? buildRagContext(result, prompt, { budget: 4000 }) : null;
+      if (context?.noCoverage) {
+        setMessages([
+          ...next,
+          { role: "assistant", content: "No note in this board covers that question." },
+        ]);
+        return;
+      }
       const payload: ChatMessage[] = [
         {
           role: "system",
           content:
-            "You are the assistant inside boardy Studio. Answer from the project's .boardy notes when possible, and say when a note does not cover it. Be concise.",
+            "You are the assistant inside boardy Studio. Answer only from the project notes below, and cite the note id in square brackets for each claim, for example [modules/play-runtime]. If the notes do not cover it, say so. Be concise.",
         },
-        ...(context ? [{ role: "system" as const, content: `Relevant notes:\n\n${context}` }] : []),
+        ...(context?.text
+          ? [{ role: "system" as const, content: `Relevant notes:\n\n${context.text}` }]
+          : []),
         ...next.map((m) => ({ role: m.role, content: m.content })),
       ];
       const reply = await chat(settings, payload);

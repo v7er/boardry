@@ -1,3 +1,3 @@
 # Whitelist
 
-The allowed stack. Anything not here needs a decision first.
+The allowed libraries and tools. Pick from the list, and ask before adding anything outside it.

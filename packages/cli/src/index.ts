@@ -6,7 +6,12 @@ import path from "node:path";
 import { createServer } from "node:http";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import sirv from "sirv";
-import { loadKnowledge, findBoardyDir, findNote } from "./context.js";
+import { loadKnowledge, findBoardyDir, findNote, loadOpenWiki, loadQaEntries } from "./context.js";
+import { buildRagContext, buildBridge, matchQa, mergeKnowledge, openwikiToNotes } from "@boardy/core";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
+
+const execAsync = promisify(exec);
 
 const program = new Command();
 
@@ -170,6 +175,122 @@ program
       if (links) console.log(chalk.dim(`  ${links}`));
     }
   });
+
+program
+  .command("context <question>")
+  .description("assemble a RAG context block for an LLM")
+  .option("--budget <chars>", "max characters of context", "6000")
+  .action(async (question: string, opts: { budget: string }) => {
+    const loaded = await loadOrFail();
+    const context = buildRagContext(loaded.result, question, {
+      budget: Number(opts.budget) || 6000,
+    });
+    if (context.noCoverage) {
+      console.log(chalk.yellow("No note covers this question."));
+      return;
+    }
+    console.log(context.text);
+    const sources = context.sources.map((source) => `${source.noteId}`).join(", ");
+    console.error(chalk.dim(`sources: ${sources}`));
+  });
+
+program
+  .command("qa [question]")
+  .description("look up a verified answer in .boardy/questions/")
+  .option("--list", "list every question in the index")
+  .option("--verify", "run every check and report pass/fail")
+  .option("--bench <file>", "run a labeled benchmark file")
+  .action(
+    async (
+      question: string | undefined,
+      opts: { list?: boolean; verify?: boolean; bench?: string },
+    ) => {
+      const loaded = await loadOrFail();
+      const entries = await loadQaEntries(loaded.dir);
+      const root = path.dirname(loaded.dir);
+
+      if (opts.list) {
+        for (const entry of entries) {
+          console.log(`${chalk.bold(entry.id)} ${chalk.dim(`[${entry.status}]`)} ${entry.question}`);
+        }
+        console.log(chalk.dim(`${entries.length} questions`));
+        return;
+      }
+
+      if (opts.verify) {
+        let failed = 0;
+        for (const entry of entries) {
+          if (!entry.check) {
+            console.log(chalk.yellow(`no check: ${entry.id}`));
+            continue;
+          }
+          if (entry.check === "human") {
+            console.log(chalk.dim(`human: ${entry.id} (verified by ${entry.verifiedBy ?? "?"})`));
+            continue;
+          }
+          try {
+            await execAsync(entry.check, { cwd: root, timeout: 15000 });
+            console.log(chalk.green(`ok: ${entry.id}`));
+          } catch {
+            console.log(chalk.red(`fail: ${entry.id} (${entry.check})`));
+            failed += 1;
+          }
+        }
+        if (failed > 0) process.exit(1);
+        return;
+      }
+
+      if (opts.bench) {
+        const raw = await fs.readFile(opts.bench, "utf8");
+        const cases = JSON.parse(raw) as { question: string; expect: string | null }[];
+        let correct = 0;
+        let wrong = 0;
+        for (const item of cases) {
+          const match = matchQa(entries, item.question);
+          const got = match?.entry.id ?? null;
+          const ok = got === item.expect;
+          if (ok) correct += 1;
+          else wrong += 1;
+          console.log(
+            `${ok ? chalk.green("ok") : chalk.red("miss")} ${item.question} -> ${
+              got ?? "unknown"
+            }${ok ? "" : ` (expected ${item.expect ?? "unknown"})`}`,
+          );
+        }
+        console.log(`${cases.length} questions, ${correct} correct, ${wrong} wrong`);
+        if (wrong > 0) process.exit(1);
+        return;
+      }
+
+      if (!question) {
+        console.log(chalk.yellow("Ask a question, or use --list, --verify, or --bench."));
+        return;
+      }
+
+      const match = matchQa(entries, question);
+      if (!match) {
+        console.log(
+          chalk.yellow("Not in the verified index. Use `boardy context` for an unverified answer."),
+        );
+        return;
+      }
+
+      console.log(chalk.bold(match.entry.answer));
+      console.log(chalk.dim(`question: ${match.entry.question}`));
+      console.log(chalk.dim(`match: ${match.entry.id} (${match.score.toFixed(2)})`));
+      if (match.entry.verifiedBy || match.entry.verifiedAt) {
+        console.log(
+          chalk.dim(`verified: ${match.entry.verifiedBy ?? "?"} ${match.entry.verifiedAt ?? ""}`),
+        );
+      }
+      if (match.entry.evidence.length > 0) {
+        console.log(chalk.dim(`evidence: ${match.entry.evidence.join(", ")}`));
+      }
+      if (match.entry.check) {
+        console.log(chalk.dim(`check: ${match.entry.check}`));
+      }
+    },
+  );
 
 program
   .command("search <term>")
@@ -367,8 +488,9 @@ program
 
 program
   .command("check")
-  .description("orphans, broken links, broken waterfall (exit 1 on a problem)")
-  .action(async () => {
+  .description("orphans, broken links, broken waterfall, and spec/evidence drift")
+  .option("--openwiki <dir>", "path to the openwiki/ folder")
+  .action(async (opts: { openwiki?: string }) => {
     const loaded = await loadOrFail();
     const problems: string[] = [];
     for (const orphan of loaded.result.graph.orphans) {
@@ -384,12 +506,63 @@ program
         problems.push(`unknown layer "${note.layer}": ${note.id}`);
       }
     }
+
+    const openwiki = await loadOpenWiki(loaded.dir, opts.openwiki);
+    if (openwiki) {
+      const bridge = buildBridge(mergeKnowledge(loaded.result, openwikiToNotes(openwiki.pages)));
+      for (const noteId of bridge.unverifiedNotes) {
+        problems.push(`spec unverified: ${noteId}`);
+      }
+      for (const entry of bridge.entries) {
+        if (entry.status === "evidence-stale") {
+          problems.push(
+            `evidence stale: ${entry.noteId} (note ${entry.noteUpdated} > page ${entry.pageVerified})`,
+          );
+        }
+      }
+      for (const pageId of bridge.unclaimedPages) {
+        problems.push(`page unclaimed: ${pageId}`);
+      }
+    }
+
     if (problems.length === 0) {
       console.log(chalk.green("No problems."));
       return;
     }
     problems.forEach((p) => console.log(chalk.yellow(p)));
     process.exit(1);
+  });
+
+program
+  .command("sync")
+  .description("link .boardy notes to an OpenWiki folder and report drift")
+  .option("--openwiki <dir>", "path to the openwiki/ folder")
+  .action(async (opts: { openwiki?: string }) => {
+    const loaded = await loadOrFail();
+    const openwiki = await loadOpenWiki(loaded.dir, opts.openwiki);
+    if (!openwiki) {
+      console.log(chalk.dim("No openwiki/ folder found. Nothing to sync."));
+      return;
+    }
+    const bridge = buildBridge(mergeKnowledge(loaded.result, openwikiToNotes(openwiki.pages)));
+    await fs.mkdir(path.join(loaded.dir, ".index"), { recursive: true });
+    await fs.writeFile(
+      path.join(loaded.dir, ".index", "bridge.json"),
+      `${JSON.stringify(bridge, null, 2)}\n`,
+    );
+    console.log(
+      `${bridge.entries.length} linked, ${bridge.unclaimedPages.length} unclaimed pages, ${bridge.unverifiedNotes.length} unverified notes`,
+    );
+    for (const entry of bridge.entries) {
+      const mark = entry.status === "matched" ? chalk.green("ok") : chalk.yellow("stale");
+      console.log(`  ${mark} ${entry.noteId} -> ${entry.pageId}`);
+    }
+    for (const pageId of bridge.unclaimedPages) {
+      console.log(chalk.yellow(`  unclaimed page: ${pageId}`));
+    }
+    for (const noteId of bridge.unverifiedNotes) {
+      console.log(chalk.yellow(`  spec unverified: ${noteId}`));
+    }
   });
 
 program
