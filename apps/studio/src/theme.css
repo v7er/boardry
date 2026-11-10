@@ -1,18 +1,18 @@
 :root {
   --mantine-color-body: #ffffff;
-  --boardy-sidebar-bg: #f6f6f7;
+  --boardry-sidebar-bg: #f6f6f7;
   --mantine-color-default-border: rgba(0, 0, 0, 0.07);
 }
 
 :root[data-mantine-color-scheme="light"] {
   --mantine-color-body: #ffffff;
-  --boardy-sidebar-bg: #f6f6f7;
+  --boardry-sidebar-bg: #f6f6f7;
   --mantine-color-default-border: rgba(0, 0, 0, 0.07);
 }
 
 :root[data-mantine-color-scheme="dark"] {
   --mantine-color-body: #000000;
-  --boardy-sidebar-bg: #1c1c1f;
+  --boardry-sidebar-bg: #1c1c1f;
   --mantine-color-default-border: rgba(255, 255, 255, 0.08);
 }
 
@@ -24,8 +24,8 @@ body,
 
 /* Chrome: header and sidebars share the sidebar tone. */
 .mantine-AppShell-header,
-.boardy-sidebar {
-  background: var(--boardy-sidebar-bg);
+.boardry-sidebar {
+  background: var(--boardry-sidebar-bg);
 }
 
 .mantine-AppShell-header,
@@ -75,7 +75,7 @@ body,
 
 /* Drawers and modals open on the sidebar tone. */
 [role="dialog"] {
-  background: var(--boardy-sidebar-bg);
+  background: var(--boardry-sidebar-bg);
 }
 
 /* The markdown editor sits on the drawer/IDE surface, not on its own color. */

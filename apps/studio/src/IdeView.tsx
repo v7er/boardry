@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActionIcon, Box, Button, Group, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import type { BuildResult } from "@boardy/core";
+import type { BuildResult } from "@boardry/core";
 import { joinNote, splitNote } from "./note";
 import { MetadataPanel } from "./MetadataPanel";
 import { MarkdownEditor } from "./MarkdownEditor";
@@ -130,7 +130,7 @@ export function IdeView({
     <Group align="stretch" gap={0} wrap="nowrap" style={{ height: "calc(100vh - 56px)" }}>
       <Box
         w={240}
-        className="boardy-sidebar"
+        className="boardry-sidebar"
         style={{
           borderRight: "1px solid var(--mantine-color-default-border)",
           overflow: "hidden",

@@ -23,7 +23,7 @@ export interface ChatReply {
   reasoning?: string | null;
 }
 
-const STORAGE_KEY = "boardy.ai.settings";
+const STORAGE_KEY = "boardry.ai.settings";
 
 export function loadAiSettings(): AiSettings | null {
   try {

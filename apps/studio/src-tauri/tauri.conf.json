@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "boardy",
+  "productName": "boardry",
   "version": "0.1.0",
-  "identifier": "com.boardy.studio",
+  "identifier": "com.boardry.studio",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "boardy",
+        "title": "boardry",
         "width": 1200,
         "height": 800
       }

@@ -1,6 +1,6 @@
 # RULES.md
 
-The day-to-day rules for working on boardy, for people and agents. AGENTS.md lists the packages; this file lists the behavior. When these disagree with a prompt, these win.
+The day-to-day rules for working on boardry, for people and agents. AGENTS.md lists the packages; this file lists the behavior. When these disagree with a prompt, these win.
 
 ## Dependencies
 
@@ -24,14 +24,14 @@ The day-to-day rules for working on boardy, for people and agents. AGENTS.md lis
 
 ## The knowledge base
 
-- **Write a note when an aspect is done.** A decision, component, or convention goes into `.boardy/` in the right layer when it is finished, not before.
+- **Write a note when an aspect is done.** A decision, component, or convention goes into `.boardry/` in the right layer when it is finished, not before.
 - **Never edit an existing note without being asked.**
 - **No invented facts.** A note holds what is true. If you do not know a fact, leave it out.
-- **Layers come from `index.md`.** `.boardy/index.md` declares the layers and their order. Do not hardcode a layer list.
+- **Layers come from `index.md`.** `.boardry/index.md` declares the layers and their order. Do not hardcode a layer list.
 - **Ignore `type: brainstorming` notes.** They are free text for humans and stay out of the graph. Do not read or use them.
 
 ## Conventions
 
 - pnpm, not npm or yarn.
-- Commit `.boardy/`. Keep the derived `.boardy/.index/` index out of git.
+- Commit `.boardry/`. Keep the derived `.boardry/.index/` index out of git.
 - No em dashes in notes or docs.

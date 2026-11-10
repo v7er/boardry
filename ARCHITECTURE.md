@@ -1,15 +1,15 @@
 # ARCHITECTURE.md
 
-How boardy is put together, and where each whitelisted package is used.
+How boardry is put together, and where each whitelisted package is used.
 
 ## Overview
 
-boardy is a document centre. The source of truth is `.boardy/`, a folder of markdown notes. Everything else reads and writes that folder.
+boardry is a document centre. The source of truth is `.boardry/`, a folder of markdown notes. Everything else reads and writes that folder.
 
 Three programs share one TypeScript core:
 
 - `packages/core` parses notes and builds the graph and the index.
-- `packages/cli` runs the core in Node, as the `boardy` command.
+- `packages/cli` runs the core in Node, as the `boardry` command.
 - `apps/studio` runs the core in a Tauri window, as the desktop app.
 
 The core is pure. It takes text in and returns a graph and an index, and it never reads the file system. Each program injects its own file access, so the same core runs unchanged in both.
@@ -17,7 +17,7 @@ The core is pure. It takes text in and returns a graph and an index, and it neve
 ## The pieces
 
 ```text
-.boardy/        the notes, markdown, the source of truth
+.boardry/        the notes, markdown, the source of truth
         |
         v
 packages/core        parse + graph + index (pure TypeScript)
@@ -36,7 +36,7 @@ packages/core        parse + graph + index (pure TypeScript)
 
 Notes marked `type: brainstorming` are skipped when the graph and index are built. They stay plain text for the human and never reach AI.
 
-The graph and the index are derived data. They are rebuilt from the notes and never edited by hand. The `.boardy/.index/` folder holds the cached index and stays out of git.
+The graph and the index are derived data. They are rebuilt from the notes and never edited by hand. The `.boardry/.index/` folder holds the cached index and stays out of git.
 
 ## The file access seam
 
@@ -56,7 +56,7 @@ Because the seam is small, the parser, graph, and index never know which program
 
 ## Whitelist package usage
 
-The full allowed stack, with what each package does and where it lives. The packages publish under the `@boardy` scope (`@boardy/core`, `@boardy/cli`).
+The full allowed stack, with what each package does and where it lives. The packages publish under the `@boardry` scope (`@boardry/core`, `@boardry/cli`).
 
 | Package | Where | What it does |
 |---|---|---|
@@ -109,10 +109,10 @@ The full allowed stack, with what each package does and where it lives. The pack
 
 ## Layers and the folder
 
-The layers are data, not code. An `index.md` at the root of `.boardy/` declares which folders are layers and their order. `core` reads `index.md`, then keys each note by its `layer` field, not by directory. The folders are a convenience for people.
+The layers are data, not code. An `index.md` at the root of `.boardry/` declares which folders are layers and their order. `core` reads `index.md`, then keys each note by its `layer` field, not by directory. The folders are a convenience for people.
 
 ```text
-.boardy/
+.boardry/
   .gitignore          ignores .index/
   index.md            declares the layers and their order
   brief.md            layer: brief

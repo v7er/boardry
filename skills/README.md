@@ -1,16 +1,16 @@
-# boardy skills
+# boardry skills
 
 Two installable agent skills, in the generic `SKILL.md` format. Any agent that reads agent skills can use them, not just Claude Code.
 
-- `boardy-ask` - query the `.boardy/` knowledge base with the CLI.
-- `boardy-note` - write a note into `.boardy/` in the right format.
+- `boardry-ask` - query the `.boardry/` knowledge base with the CLI.
+- `boardry-note` - write a note into `.boardry/` in the right format.
 
 ## Install via npx
 
 ```bash
-npx @boardy/skills                 # project level
-npx @boardy/skills --global        # user level, every project
-npx @boardy/skills --target DIR    # one exact skills directory
+npx @boardry/skills                 # project level
+npx @boardry/skills --global        # user level, every project
+npx @boardry/skills --target DIR    # one exact skills directory
 ```
 
 ## Where they go
@@ -29,8 +29,8 @@ If your agent reads skills from somewhere else, pass `--target <dir>`.
 
 ```bash
 mkdir -p .claude/skills
-cp boardy-ask/SKILL.md .claude/skills/boardy-ask/SKILL.md
-cp boardy-note/SKILL.md .claude/skills/boardy-note/SKILL.md
+cp boardry-ask/SKILL.md .claude/skills/boardry-ask/SKILL.md
+cp boardry-note/SKILL.md .claude/skills/boardry-note/SKILL.md
 ```
 
 Restart the agent to load them.

@@ -23,7 +23,7 @@ function slugOf(id: string): string {
 }
 
 /**
- * Link intent notes (boardy) to evidence pages (OpenWiki) by slug, component,
+ * Link intent notes (boardry) to evidence pages (OpenWiki) by slug, component,
  * or an explicit `openwiki:` link. Nothing is written to either source.
  */
 export function buildBridge(result: BuildResult): BridgeResult {

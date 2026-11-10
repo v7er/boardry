@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Button, Group, Text } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
-import type { BuildResult, Note } from "@boardy/core";
+import type { BuildResult, Note } from "@boardry/core";
 import { joinNote, splitNote } from "./note";
 import { MetadataPanel } from "./MetadataPanel";
 import { MarkdownEditor } from "./MarkdownEditor";

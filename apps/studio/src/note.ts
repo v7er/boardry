@@ -1,4 +1,4 @@
-import { parseNote, type BuildResult } from "@boardy/core";
+import { parseNote, type BuildResult } from "@boardry/core";
 
 export interface SplitNote {
   frontmatterText: string;

@@ -4,7 +4,7 @@ Read this file, people and agents alike. It says what this project is, how the c
 
 ## The project
 
-boardy is a document centre for a product. It keeps the project's knowledge in a `.boardy/` folder of markdown notes, organized in layers that an `index.md` declares, linked into one graph. A CLI, agent skills, and a Tauri Studio app read and write the same folder.
+boardry is a document centre for a product. It keeps the project's knowledge in a `.boardry/` folder of markdown notes, organized in layers that an `index.md` declares, linked into one graph. A CLI, agent skills, and a Tauri Studio app read and write the same folder.
 
 Read [README.md](./README.md) for setup, [AI_GUIDE.md](./AI_GUIDE.md) for the full specification, [ARCHITECTURE.md](./ARCHITECTURE.md) for how the code is put together, and [RULES.md](./RULES.md) for the day-to-day rules.
 
@@ -13,15 +13,15 @@ Read [README.md](./README.md) for setup, [AI_GUIDE.md](./AI_GUIDE.md) for the fu
 ```text
 .
   packages/core/   the pure TypeScript graph engine and parser, no file I/O
-  packages/cli/    the Node CLI (boardy)
+  packages/cli/    the Node CLI (boardry)
   apps/studio/        the Tauri 2 + React desktop app
   skills/             agent skill files
-  .boardy/    the notes (data, not code)
+  .boardry/    the notes (data, not code)
 ```
 
 ## The package whitelist
 
-This is the allowed stack. The packages publish under the `@boardy` scope (`@boardy/core`, `@boardy/cli`). Pick from it, do not reach outside it without asking, and do not rewrite from scratch what a listed package already does.
+This is the allowed stack. The packages publish under the `@boardry` scope (`@boardry/core`, `@boardry/cli`). Pick from it, do not reach outside it without asking, and do not rewrite from scratch what a listed package already does.
 
 ### Toolchain
 
@@ -84,10 +84,10 @@ This is the allowed stack. The packages publish under the `@boardy` scope (`@boa
 
 ## Rules for coding
 
-1. **Read the notes first.** Before answering a question or changing code, read the relevant notes in `.boardy/`. Use the CLI (`boardy ask`, `boardy fit`) when it is available.
+1. **Read the notes first.** Before answering a question or changing code, read the relevant notes in `.boardry/`. Use the CLI (`boardry ask`, `boardry fit`) when it is available.
 2. **Search the whitelist first.** Check the list above before reaching for anything. If the package you need is not listed, do not install it. Ask the user first, using the ask tool: name the package and why you need it, then wait for an answer.
 3. **Do not build from scratch.** If a listed package already does the job, use it. A markdown parser, a graph library, a full-text index, and a file watcher are already covered.
-4. **Write a note when an aspect is done.** A decision, component, or convention goes into `.boardy/` as a note in the right layer when it is finished, not before. Never edit an existing note without being asked.
+4. **Write a note when an aspect is done.** A decision, component, or convention goes into `.boardry/` as a note in the right layer when it is finished, not before. Never edit an existing note without being asked.
 5. **Keep the core pure.** `packages/core` does no file I/O. It takes text in and returns a graph and an index. The CLI and Studio inject their own file access.
 6. **Keep it readable for people.** This is a document centre for humans. Write code and notes a person can follow, not just an AI.
 7. **Ignore brainstorming notes.** A note with `type: brainstorming` is a human's free text. Do not read it, link it, quote it, or build on it. It is not part of the graph.
@@ -97,7 +97,7 @@ This is the allowed stack. The packages publish under the `@boardy` scope (`@boa
 - pnpm, not npm or yarn.
 - TypeScript strict. No `any` without a reason written down.
 - Every note carries a `layer` field (a name from `index.md`), and a `component` field where it applies.
-- Commit `.boardy/`. Keep the derived `.boardy/.index/` index out of git.
+- Commit `.boardry/`. Keep the derived `.boardry/.index/` index out of git.
 
 <!-- trail:start -->
 ## Trail — repo context graph

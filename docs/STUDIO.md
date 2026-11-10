@@ -4,14 +4,14 @@ The desktop app. All features, requirements, and tech for Studio.
 
 ## What it is
 
-A local desktop app, built with Tauri. It opens a `.boardy/` folder, draws its notes as a layered graph, and lets you read, create, and edit notes. No server, no account: everything runs on your machine.
+A local desktop app, built with Tauri. It opens a `.boardry/` folder, draws its notes as a layered graph, and lets you read, create, and edit notes. No server, no account: everything runs on your machine.
 
 ## Open a folder
 
-- Open either the project root (which contains `.boardy/`) or the `.boardy/` folder itself.
-- Studio finds `.boardy/index.md` either way.
+- Open either the project root (which contains `.boardry/`) or the `.boardry/` folder itself.
+- Studio finds `.boardry/index.md` either way.
 - It reads the layers from `index.md`; nothing about the layer set is hardcoded.
-- `.boardy/.index/` is the derived index and stays out of git.
+- `.boardry/.index/` is the derived index and stays out of git.
 
 ## Views
 
@@ -39,7 +39,7 @@ Two views over the same folder. Switch from the header.
 - **+** on a node in the graph opens the new-node dialog for a child of that node.
 - Enter a name and, optionally, the content.
 - The layer is inferred from the node you created from. There is no layer picker, and no kind or component field.
-- Studio writes `.boardy/<layer>/<slug>.md`, links it to the parent with `refines`, and opens it.
+- Studio writes `.boardry/<layer>/<slug>.md`, links it to the parent with `refines`, and opens it.
 
 ## Edit a note
 
@@ -59,7 +59,7 @@ Two views over the same folder. Switch from the header.
   - On open, it auto-detects provider env vars (`OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `DEEPSEEK_API_KEY`, `GROQ_API_KEY`) and their `*_BASE_URL` / `*_MODEL`.
   - **Auto-fill from env** refills the key, base URL, and model from the environment.
   - **Fetch models** lists the provider's models for the model picker.
-- **Chat**: a side panel. The prompt is sent with the top matching notes as context. It answers from `.boardy` and says when a note does not cover something.
+- **Chat**: a side panel. The prompt is sent with the top matching notes as context. It answers from `.boardry` and says when a note does not cover something.
 - Brainstorming notes (`type: brainstorming`) are ignored by the graph and by AI.
 
 ## The interface
@@ -72,7 +72,7 @@ Two views over the same folder. Switch from the header.
 
 - Tauri 2 with `@tauri-apps/api`.
 - Plugins: `plugin-dialog` (folder picker), `plugin-fs`, `plugin-shell`.
-- File access for `.boardy/` goes through Rust commands (`load_boardy`, `save_note`) so hidden folders and any location work.
+- File access for `.boardry/` goes through Rust commands (`load_boardry`, `save_note`) so hidden folders and any location work.
 - AI calls go through Rust (`detect_ai_env`, `list_models`, `chat`) with `reqwest`, so there is no browser CORS limit.
 - React 19 with TypeScript, built by Vite.
 - `@xyflow/react` (React Flow) for the graph.

@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const skills = ["boardy-ask", "boardy-note"];
+const skills = ["boardry-ask", "boardry-note"];
 const home = process.env.HOME ?? "";
 const cwd = process.cwd();
 
@@ -48,7 +48,7 @@ for (const [label, dir] of targets) {
     await copyFile(src, dst);
     wrote += 1;
   }
-  console.log(`installed ${wrote}/${skills.length} boardy skills -> ${dir}  (${label})`);
+  console.log(`installed ${wrote}/${skills.length} boardry skills -> ${dir}  (${label})`);
 }
 
 console.log("\nDone. Start a new agent session to load the skills.");

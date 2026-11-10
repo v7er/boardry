@@ -17,7 +17,7 @@ export interface BuildResult {
 
 function toId(path: string): string {
   let p = path.replace(/\\/g, "/");
-  if (p.startsWith(".boardy/")) p = p.slice(".boardy/".length);
+  if (p.startsWith(".boardry/")) p = p.slice(".boardry/".length);
   if (p.startsWith("./")) p = p.slice(2);
   return p.replace(/\.md$/, "");
 }
@@ -48,7 +48,7 @@ export function buildKnowledge(indexMd: string, inputs: NoteInput[]): BuildResul
       type: fm.type,
       summary: fm.summary,
       icon: fm.icon,
-      source: input.source ?? "boardy",
+      source: input.source ?? "boardry",
       updated: fm.updated,
       tags: fm.tags ?? [],
       links: fm.links ?? [],

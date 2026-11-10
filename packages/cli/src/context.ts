@@ -10,7 +10,7 @@ import {
   type Note,
   type OpenWikiPage,
   type QaEntry,
-} from "@boardy/core";
+} from "@boardry/core";
 
 export interface LoadedKnowledge {
   dir: string;
@@ -25,18 +25,18 @@ async function hasIndex(dir: string): Promise<boolean> {
   }
 }
 
-export async function findBoardyDir(start: string, explicit?: string): Promise<string | null> {
+export async function findBoardryDir(start: string, explicit?: string): Promise<string | null> {
   if (explicit) {
     const abs = path.resolve(explicit);
     if (await hasIndex(abs)) return abs;
-    const nested = path.join(abs, ".boardy");
+    const nested = path.join(abs, ".boardry");
     if (await hasIndex(nested)) return nested;
     return null;
   }
 
   let current = path.resolve(start);
   for (;;) {
-    const candidate = path.join(current, ".boardy");
+    const candidate = path.join(current, ".boardry");
     try {
       const stat = await fs.stat(candidate);
       if (stat.isDirectory()) return candidate;
@@ -50,7 +50,7 @@ export async function findBoardyDir(start: string, explicit?: string): Promise<s
 }
 
 export async function loadKnowledge(start: string, explicit?: string): Promise<LoadedKnowledge | null> {
-  const dir = await findBoardyDir(start, explicit);
+  const dir = await findBoardryDir(start, explicit);
   if (!dir) return null;
 
   const indexPath = path.join(dir, "index.md");
@@ -79,7 +79,7 @@ export async function loadKnowledge(start: string, explicit?: string): Promise<L
 }
 
 export function findNote(result: BuildResult, query: string): Note | undefined {
-  const q = query.replace(/\.md$/, "").replace(/^\.?boardy\//, "");
+  const q = query.replace(/\.md$/, "").replace(/^\.?boardry\//, "");
   return result.notes.find((n) => n.id === q) ?? result.notes.find((n) => n.id.split("/").pop() === q);
 }
 
@@ -88,9 +88,9 @@ export interface LoadedOpenWiki {
   pages: OpenWikiPage[];
 }
 
-/** Read the verified question index from `<boardyDir>/questions/`. */
-export async function loadQaEntries(boardyDir: string): Promise<QaEntry[]> {
-  const dir = path.join(boardyDir, "questions");
+/** Read the verified question index from `<boardryDir>/questions/`. */
+export async function loadQaEntries(boardryDir: string): Promise<QaEntry[]> {
+  const dir = path.join(boardryDir, "questions");
   let files: string[] = [];
   try {
     files = await fg("*.md", { cwd: dir, dot: false });
@@ -106,12 +106,12 @@ export async function loadQaEntries(boardyDir: string): Promise<QaEntry[]> {
   return entries;
 }
 
-/** Read an OpenWiki folder (sibling of the boardy folder by default). */
+/** Read an OpenWiki folder (sibling of the boardry folder by default). */
 export async function loadOpenWiki(
-  boardyDir: string,
+  boardryDir: string,
   explicit?: string,
 ): Promise<LoadedOpenWiki | null> {
-  const dir = explicit ? path.resolve(explicit) : path.join(path.dirname(boardyDir), "openwiki");
+  const dir = explicit ? path.resolve(explicit) : path.join(path.dirname(boardryDir), "openwiki");
 
   let isDir = false;
   try {

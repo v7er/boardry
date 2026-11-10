@@ -224,7 +224,7 @@ export function buildRagContext(
   }
 
   const lines: string[] = [
-    `# boardy context`,
+    `# boardry context`,
     `question: ${question}`,
     `notes: ${result.notes.length}`,
     "",

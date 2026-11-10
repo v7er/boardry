@@ -6,7 +6,7 @@ import {
   parseQaEntry,
   type BuildResult,
   type QaEntry,
-} from "@boardy/core";
+} from "@boardry/core";
 
 interface FileEntry {
   path: string;
@@ -30,10 +30,12 @@ export function CommandBox({
   result,
   files,
   onOpen,
+  onHighlight,
 }: {
   result: BuildResult;
   files: FileEntry[];
   onOpen: (id: string) => void;
+  onHighlight: (ids: string[]) => void;
 }) {
   const [input, setInput] = useState("");
   const [hint, setHint] = useState("");
@@ -55,6 +57,7 @@ export function CommandBox({
     if (text === "/" || text === "/help") {
       setHint("");
       setLines(HELP);
+      onHighlight([]);
       return;
     }
 
@@ -64,8 +67,19 @@ export function CommandBox({
       if (!match) {
         setHint(`No verified answer for "${query}". Try /ask.`);
         setLines([]);
+        onHighlight([]);
         return;
       }
+      const noteIds = match.entry.evidence
+        .map((item) => item.replace(/^\[\[/, "").replace(/\]\]$/, "").trim())
+        .map(
+          (target) =>
+            result.notes.find(
+              (note) => note.id === target || note.id.split("/").pop() === target,
+            )?.id,
+        )
+        .filter((id): id is string => Boolean(id));
+      onHighlight(noteIds);
       setHint("");
       setLines([
         { text: match.entry.answer },
@@ -81,8 +95,10 @@ export function CommandBox({
       if (context.noCoverage) {
         setHint(`No note covers "${query}".`);
         setLines([]);
+        onHighlight([]);
         return;
       }
+      onHighlight(context.sources.map((source) => source.noteId));
       setHint("");
       setLines(
         context.sources.map((source) => ({
@@ -100,6 +116,7 @@ export function CommandBox({
         .slice(0, 6);
       setHint(hits.length === 0 ? `No note matches "${term}".` : "");
       setLines(hits.map((note) => ({ text: note.title, noteId: note.id })));
+      onHighlight(hits.map((note) => note.id));
       return;
     }
 
@@ -109,6 +126,7 @@ export function CommandBox({
         (item) => item.id === id || item.id.split("/").pop() === id,
       );
       if (note) {
+        onHighlight([note.id]);
         onOpen(note.id);
         setInput("");
         setHint("");
@@ -116,12 +134,14 @@ export function CommandBox({
       } else {
         setHint(`No note "${id}".`);
         setLines([]);
+        onHighlight([]);
       }
       return;
     }
 
     setHint("Unknown command. Type /help.");
     setLines([]);
+    onHighlight([]);
   };
 
   return (

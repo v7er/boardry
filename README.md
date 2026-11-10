@@ -1,12 +1,12 @@
-# boardy
+# boardry
 
 The document centre for your product. Layers you define in `index.md`, linked into one graph, with AI skills mapped onto every part.
 
 ## What it is
 
-boardy keeps everything you know about a product in one folder, `.boardy/`, as plain markdown notes. A CLI, a desktop app (Studio), and AI agent skills all read and write the same files.
+boardry keeps everything you know about a product in one folder, `.boardry/`, as plain markdown notes. A CLI, a desktop app (Studio), and AI agent skills all read and write the same files.
 
-This repo ships a populated `.boardy/` that documents boardy itself: 13 notes across the brief, components, prototypes, modules, technical, and whitelist layers.
+This repo ships a populated `.boardry/` that documents boardry itself: 13 notes across the brief, components, prototypes, modules, technical, and whitelist layers.
 
 ## Setup
 
@@ -20,7 +20,7 @@ pnpm run build
 ## Using the CLI
 
 ```bash
-node packages/cli/dist/index.js index            # build .boardy/.index/
+node packages/cli/dist/index.js index            # build .boardry/.index/
 node packages/cli/dist/index.js ask "how do refunds work"
 node packages/cli/dist/index.js check
 ```
@@ -33,8 +33,8 @@ pnpm run cli index
 
 Common commands:
 
-- `init` - set up `.boardy/` with `index.md` and `.gitignore`.
-- `index` - rebuild the derived index in `.boardy/.index/`.
+- `init` - set up `.boardry/` with `index.md` and `.gitignore`.
+- `index` - rebuild the derived index in `.boardry/.index/`.
 - `ask <question>` - ranked notes and their links.
 - `search <term>` - full-text search.
 - `layers` - list the layers.
@@ -57,17 +57,17 @@ See [docs/CLI.md](./docs/CLI.md) for every command.
 
 A note with `type: brainstorming` is free text for a human, ignored by the graph and by AI.
 
-`boardy index` writes the derived index to `.boardy/.index/` (gitignored). The markdown is always the source of truth.
+`boardry index` writes the derived index to `.boardry/.index/` (gitignored). The markdown is always the source of truth.
 
 ## Using Studio
 
 Studio is the desktop app for the same folder:
 
 ```bash
-pnpm --filter @boardy/studio run tauri dev
+pnpm --filter @boardry/studio run tauri dev
 ```
 
-Open the project root (which contains `.boardy/`) or the `.boardy/` folder itself. Studio finds `.boardy/index.md` either way and draws the graph. Press Cmd-K to search, click a node to edit its note.
+Open the project root (which contains `.boardry/`) or the `.boardry/` folder itself. Studio finds `.boardry/index.md` either way and draws the graph. Press Cmd-K to search, click a node to edit its note.
 
 See [docs/STUDIO.md](./docs/STUDIO.md) for the feature list.
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Badge, Button, Group, Stack, Textarea } from "@mantine/core";
-import type { BuildResult } from "@boardy/core";
+import type { BuildResult } from "@boardry/core";
 import { noteTitle, resolveNoteId } from "./note";
 
 function stringValue(value: unknown): string {

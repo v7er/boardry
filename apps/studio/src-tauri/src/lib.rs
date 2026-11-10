@@ -1,43 +1,43 @@
 use std::path::{Path, PathBuf};
 
 #[derive(serde::Serialize)]
-struct BoardyNote {
+struct BoardryNote {
     path: String,
     content: String,
 }
 
 #[derive(serde::Serialize)]
-struct BoardyLoad {
-    boardy_dir: String,
+struct BoardryLoad {
+    boardry_dir: String,
     index_md: String,
-    notes: Vec<BoardyNote>,
-    files: Vec<BoardyNote>,
+    notes: Vec<BoardryNote>,
+    files: Vec<BoardryNote>,
 }
 
-fn resolve_boardy_dir(folder: &str) -> Result<PathBuf, String> {
+fn resolve_boardry_dir(folder: &str) -> Result<PathBuf, String> {
     let trimmed = folder.trim_end_matches('/');
     let path = PathBuf::from(trimmed);
 
-    // The selected folder is the .boardy folder itself.
-    if trimmed.ends_with(".boardy") && path.join("index.md").exists() {
+    // The selected folder is the .boardry folder itself.
+    if trimmed.ends_with(".boardry") && path.join("index.md").exists() {
         return Ok(path);
     }
 
-    // The selected folder is a project root that contains .boardy/.
-    let nested = path.join(".boardy");
+    // The selected folder is a project root that contains .boardry/.
+    let nested = path.join(".boardry");
     if nested.join("index.md").exists() {
         return Ok(nested);
     }
 
-    // The selected folder is a boardy folder under another name.
+    // The selected folder is a boardry folder under another name.
     if path.join("index.md").exists() && path.join(".gitignore").exists() {
         return Ok(path);
     }
 
-    Err(format!("no .boardy/index.md found in {folder}"))
+    Err(format!("no .boardry/index.md found in {folder}"))
 }
 
-fn collect_notes(root: &Path, dir: &Path, out: &mut Vec<BoardyNote>) -> Result<(), String> {
+fn collect_notes(root: &Path, dir: &Path, out: &mut Vec<BoardryNote>) -> Result<(), String> {
     for entry in std::fs::read_dir(dir).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
         let name = entry.file_name().to_string_lossy().to_string();
@@ -57,13 +57,13 @@ fn collect_notes(root: &Path, dir: &Path, out: &mut Vec<BoardyNote>) -> Result<(
                 .to_string_lossy()
                 .replace('\\', "/");
             let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
-            out.push(BoardyNote { path: rel, content });
+            out.push(BoardryNote { path: rel, content });
         }
     }
     Ok(())
 }
 
-fn collect_files(root: &Path, dir: &Path, out: &mut Vec<BoardyNote>) -> Result<(), String> {
+fn collect_files(root: &Path, dir: &Path, out: &mut Vec<BoardryNote>) -> Result<(), String> {
     for entry in std::fs::read_dir(dir).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
         let name = entry.file_name().to_string_lossy().to_string();
@@ -80,22 +80,22 @@ fn collect_files(root: &Path, dir: &Path, out: &mut Vec<BoardyNote>) -> Result<(
                 .to_string_lossy()
                 .replace('\\', "/");
             let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
-            out.push(BoardyNote { path: rel, content });
+            out.push(BoardryNote { path: rel, content });
         }
     }
     Ok(())
 }
 
 #[tauri::command]
-fn load_boardy(folder: String) -> Result<BoardyLoad, String> {
-    let boardy_dir = resolve_boardy_dir(&folder)?;
-    let index_md = std::fs::read_to_string(boardy_dir.join("index.md")).unwrap_or_default();
+fn load_boardry(folder: String) -> Result<BoardryLoad, String> {
+    let boardry_dir = resolve_boardry_dir(&folder)?;
+    let index_md = std::fs::read_to_string(boardry_dir.join("index.md")).unwrap_or_default();
     let mut notes = Vec::new();
-    collect_notes(&boardy_dir, &boardy_dir, &mut notes)?;
+    collect_notes(&boardry_dir, &boardry_dir, &mut notes)?;
     let mut files = Vec::new();
-    collect_files(&boardy_dir, &boardy_dir, &mut files)?;
-    Ok(BoardyLoad {
-        boardy_dir: boardy_dir.to_string_lossy().to_string(),
+    collect_files(&boardry_dir, &boardry_dir, &mut files)?;
+    Ok(BoardryLoad {
+        boardry_dir: boardry_dir.to_string_lossy().to_string(),
         index_md,
         notes,
         files,
@@ -197,9 +197,9 @@ fn detect_ai_env() -> AiEnv {
     }
 
     AiEnv {
-        base_url: env_value("BOARDY_BASE_URL").unwrap_or_else(|| DEFAULT_LOCAL.to_string()),
-        model: env_value("BOARDY_MODEL").unwrap_or_else(|| "llama3.1".to_string()),
-        api_key: env_value("BOARDY_API_KEY").unwrap_or_else(|| "local".to_string()),
+        base_url: env_value("BOARDRY_BASE_URL").unwrap_or_else(|| DEFAULT_LOCAL.to_string()),
+        model: env_value("BOARDRY_MODEL").unwrap_or_else(|| "llama3.1".to_string()),
+        api_key: env_value("BOARDRY_API_KEY").unwrap_or_else(|| "local".to_string()),
         source: "local".to_string(),
     }
 }
@@ -317,7 +317,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            load_boardy,
+            load_boardry,
             save_note,
             move_note,
             delete_note,
@@ -327,5 +327,5 @@ pub fn run() {
             chat
         ])
         .run(tauri::generate_context!())
-        .expect("error while running boardy Studio");
+        .expect("error while running boardry Studio");
 }

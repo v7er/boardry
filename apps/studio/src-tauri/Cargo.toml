@@ -1,11 +1,11 @@
 [package]
-name = "boardy"
+name = "boardry"
 version = "0.1.0"
-description = "boardy Studio desktop app"
+description = "boardry Studio desktop app"
 edition = "2021"
 
 [lib]
-name = "boardy_lib"
+name = "boardry_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

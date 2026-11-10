@@ -4,7 +4,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import {
@@ -16,7 +15,6 @@ import {
   Position,
   ReactFlow,
   useNodesState,
-  useStore,
   ViewportPortal,
   type Node,
   type NodeProps,
@@ -24,10 +22,10 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Button, Group, useComputedColorScheme } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { IconEye, IconEyeOff, IconPlus } from "@tabler/icons-react";
 import { SmartEdgeProvider, createSmartEdge } from "@tisoap/react-flow-smart-edge";
-import type { BuildResult, Note } from "@boardy/core";
-import { moveNote, setLayer } from "./boardy";
+import type { BuildResult, Note } from "@boardry/core";
+import { moveNote, setLayer } from "./boardry";
 import { CommandBox } from "./CommandBox";
 import { NodeIcon } from "./NodeIcon";
 import { defaultIconFor } from "./icons";
@@ -42,101 +40,18 @@ const COLORS: Record<string, string> = {
   whitelist: "#ef4444",
 };
 
-const Y_STEP = 200;
-const X_STEP = 260;
+const X_STEP = 300;
+const Y_STEP = 130;
+const BOX_PAD = 24;
+const LABEL_H = 28;
+const BOX_GAP = 24;
 const PREVIEW_LIMIT = 160;
 
 function truncate(text: string): string {
   return text.length > PREVIEW_LIMIT ? `${text.slice(0, PREVIEW_LIMIT)}...` : text;
 }
 
-const NODE_GAP = 44;
-
-function rectsOverlap(
-  a: { x: number; y: number; w: number; h: number },
-  b: { x: number; y: number; w: number; h: number },
-): boolean {
-  return (
-    a.x < b.x + b.w + NODE_GAP &&
-    a.x + a.w + NODE_GAP > b.x &&
-    a.y < b.y + b.h + NODE_GAP &&
-    a.y + a.h + NODE_GAP > b.y
-  );
-}
-
-/** Push overlapping nodes down until no two rectangles overlap. */
-function avoidOverlaps(nodes: BoardyNode[]): BoardyNode[] {
-  const rects = nodes.map((node) => ({
-    id: node.id,
-    x: node.position.x,
-    y: node.position.y,
-    w: node.measured?.width ?? 200,
-    h: node.measured?.height ?? 60,
-  }));
-  const order = [...rects].sort((a, b) => a.y - b.y || a.x - b.x);
-
-  for (let pass = 0; pass < 20; pass += 1) {
-    order.sort((a, b) => a.y - b.y || a.x - b.x);
-    let moved = false;
-    for (let i = 0; i < order.length; i += 1) {
-      for (let j = i + 1; j < order.length; j += 1) {
-        if (rectsOverlap(order[i]!, order[j]!)) {
-          order[j]!.y = order[i]!.y + order[i]!.h + NODE_GAP;
-          moved = true;
-        }
-      }
-    }
-    if (!moved) break;
-  }
-
-  const byId = new Map(order.map((rect) => [rect.id, rect]));
-  return nodes.map((node) => {
-    const rect = byId.get(node.id)!;
-    return rect.x === node.position.x && rect.y === node.position.y
-      ? node
-      : { ...node, position: { x: rect.x, y: rect.y } };
-  });
-}
-
-const LAYER_GAP = 40;
-
-/** Keep each layer box stacked below the previous one, in index.md order. */
-function stackLayers(nodes: BoardyNode[], layers: string[]): BoardyNode[] {
-  const boxes = new Map<string, { minY: number; maxY: number }>();
-  for (const node of nodes) {
-    const height = node.measured?.height ?? 56;
-    const current = boxes.get(node.data.layer);
-    boxes.set(
-      node.data.layer,
-      current
-        ? {
-            minY: Math.min(current.minY, node.position.y),
-            maxY: Math.max(current.maxY, node.position.y + height),
-          }
-        : { minY: node.position.y, maxY: node.position.y + height },
-    );
-  }
-
-  const shifts = new Map<string, number>();
-  let previousBottom: number | null = null;
-  for (const layer of layers) {
-    const box = boxes.get(layer);
-    if (!box) continue;
-    const top: number =
-      previousBottom === null ? box.minY : Math.max(box.minY, previousBottom + LAYER_GAP);
-    shifts.set(layer, top - box.minY);
-    previousBottom = top + (box.maxY - box.minY);
-  }
-
-  return nodes.map((node) => {
-    const shift = shifts.get(node.data.layer) ?? 0;
-    return shift === 0
-      ? node
-      : { ...node, position: { x: node.position.x, y: node.position.y + shift } };
-  });
-}
-
-type BoardyNodeData = {
+type BoardryNodeData = {
   label: string;
   layer: string;
   color: string;
@@ -147,9 +62,11 @@ type BoardyNodeData = {
   brainstorm: string;
   collapsed: boolean;
   childCount: number;
+  dimmed: boolean;
+  highlighted: boolean;
 };
 
-type BoardyNode = Node<BoardyNodeData>;
+type BoardryNode = Node<BoardryNodeData>;
 
 const GraphActions = createContext<{
   expanded: Set<string>;
@@ -179,13 +96,13 @@ const iconButtonStyle: React.CSSProperties = {
   justifyContent: "center",
 };
 
-function BoardyNodeView({ id, data }: NodeProps<BoardyNode>) {
+function BoardryNodeView({ id, data }: NodeProps<BoardryNode>) {
   const { expanded, openNote, createChild, collapse, setIcon } = useContext(GraphActions);
   const open = expanded.has(id);
 
   return (
     <div
-      className="boardy-node"
+      className="boardry-node"
       style={{
         background: data.color,
         color: "#ffffff",
@@ -196,33 +113,12 @@ function BoardyNodeView({ id, data }: NodeProps<BoardyNode>) {
         width: open ? 280 : undefined,
         maxWidth: open ? 280 : 240,
         border: data.collapsed ? "1px dashed rgba(255,255,255,0.7)" : "none",
+        opacity: data.dimmed ? 0.2 : 1,
+        boxShadow: data.highlighted ? "0 0 0 3px rgba(250, 204, 21, 0.85)" : undefined,
+        transition: "opacity 160ms ease, box-shadow 160ms ease",
       }}
     >
       <Handle type="target" position={Position.Top} isConnectable={false} style={{ opacity: 0 }} />
-      {data.childCount > 0 && (
-        <button
-          className="nodrag collapse-dot"
-          onClick={(e) => {
-            e.stopPropagation();
-            collapse(id);
-          }}
-          aria-label={data.collapsed ? "Expand branch" : "Hide branch"}
-          style={{
-            position: "absolute",
-            top: -7,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 12,
-            height: 12,
-            borderRadius: 6,
-            border: "1px solid rgba(255,255,255,0.95)",
-            background: data.collapsed ? "#ffffff" : "rgba(255,255,255,0.15)",
-            cursor: "pointer",
-            padding: 0,
-            zIndex: 2,
-          }}
-        />
-      )}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
           <NodeIcon
@@ -238,6 +134,19 @@ function BoardyNodeView({ id, data }: NodeProps<BoardyNode>) {
           </span>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
+          {data.childCount > 0 && (
+            <button
+              className="nodrag"
+              onClick={(e) => {
+                e.stopPropagation();
+                collapse(id);
+              }}
+              aria-label={data.collapsed ? "Expand branch" : "Hide branch"}
+              style={iconButtonStyle}
+            >
+              {data.collapsed ? <IconEyeOff size={13} /> : <IconEye size={13} />}
+            </button>
+          )}
           <button
             className="nodrag"
             onClick={(e) => {
@@ -295,107 +204,77 @@ function BoardyNodeView({ id, data }: NodeProps<BoardyNode>) {
   );
 }
 
-const nodeTypes = { boardy: BoardyNodeView };
+const nodeTypes = { boardry: BoardryNodeView };
 const edgeTypes = { smart: createSmartEdge("smoothstep", { hops: { borderRadius: 8 } }) };
 
-/** Layer name that keeps its screen size while the canvas zooms. */
-function LayerLabel({ layer, onClick }: { layer: string; onClick: () => void }) {
-  const zoom = useStore((state) => state.transform[2]);
-  return (
-    <button
-      className="nodrag nopan"
-      onClick={onClick}
-      style={{
-        position: "absolute",
-        top: 4,
-        left: 8,
-        transform: `scale(${1 / zoom})`,
-        transformOrigin: "top left",
-        fontSize: 11,
-        letterSpacing: 0.4,
-        textTransform: "uppercase",
-        color: "var(--mantine-color-dimmed)",
-        background: "transparent",
-        border: "none",
-        padding: 0,
-        cursor: "pointer",
-        pointerEvents: "auto",
-      }}
-    >
-      {layer}
-    </button>
-  );
+function tint(hex: string, alpha: number): string {
+  const value = hex.replace("#", "");
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function LayerBands({
-  layers,
-  nodes,
+interface LayerBox {
+  layer: string;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+function LayerBoxes({
+  boxes,
   activeLayer,
   onLayerClick,
 }: {
-  layers: string[];
-  nodes: BoardyNode[];
+  boxes: LayerBox[];
   activeLayer: string | null;
   onLayerClick: (layer: string) => void;
 }) {
-  const PAD = 14;
-
-  // Bounds are in flow coordinates, so they only change when the chart changes
-  // (node moved, resized, added or removed) — never on pan or zoom.
-  const bounds = useMemo(() => {
-    const map = new Map<string, { minX: number; minY: number; maxX: number; maxY: number }>();
-    for (const node of nodes) {
-      const layer = node.data.layer;
-      const width = node.measured?.width ?? 200;
-      const height = node.measured?.height ?? 56;
-      const current = map.get(layer);
-      if (!current) {
-        map.set(layer, {
-          minX: node.position.x,
-          minY: node.position.y,
-          maxX: node.position.x + width,
-          maxY: node.position.y + height,
-        });
-      } else {
-        current.minX = Math.min(current.minX, node.position.x);
-        current.minY = Math.min(current.minY, node.position.y);
-        current.maxX = Math.max(current.maxX, node.position.x + width);
-        current.maxY = Math.max(current.maxY, node.position.y + height);
-      }
-    }
-    return map;
-  }, [nodes]);
-
   return (
     <ViewportPortal>
-      {layers.map((layer, index) => {
-        const box = bounds.get(layer);
-        if (!box) return null;
+      {boxes.map(({ layer, left, top, width, height }) => {
         const active = layer === activeLayer;
+        const color = COLORS[layer] ?? "#888888";
         return (
           <div
             key={layer}
             style={{
               position: "absolute",
-              left: box.minX - PAD,
-              top: box.minY - PAD,
-              width: box.maxX - box.minX + PAD * 2,
-              height: box.maxY - box.minY + PAD * 2,
+              left,
+              top,
+              width,
+              height,
+              borderRadius: 12,
               border: active
-                ? "1px solid rgba(250, 204, 21, 0.55)"
-                : "1px solid var(--mantine-color-default-border)",
-              borderRadius: 10,
-              background: active
-                ? "rgba(250, 204, 21, 0.2)"
-                : index % 2 === 0
-                  ? "rgba(127, 127, 127, 0.12)"
-                  : "rgba(127, 127, 127, 0.05)",
+                ? "1px solid rgba(250, 204, 21, 0.6)"
+                : "1px dashed var(--mantine-color-default-border)",
+              background: tint(color, active ? 0.22 : 0.12),
               pointerEvents: "none",
               zIndex: 0,
               transition: "background 140ms ease",
             }}
           >
-            <LayerLabel layer={layer} onClick={() => onLayerClick(layer)} />
+            <button
+              onClick={() => onLayerClick(layer)}
+              style={{
+                position: "absolute",
+                top: 6,
+                left: 10,
+                fontSize: 11,
+                letterSpacing: 0.4,
+                textTransform: "uppercase",
+                color: "var(--mantine-color-dimmed)",
+                background: "transparent",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                pointerEvents: "auto",
+              }}
+            >
+              {layer}
+            </button>
           </div>
         );
       })}
@@ -405,7 +284,7 @@ function LayerBands({
 
 export function GraphView({
   result,
-  boardyDir,
+  boardryDir,
   files,
   onSelect,
   onCreateChild,
@@ -414,7 +293,7 @@ export function GraphView({
   onSetIcon,
 }: {
   result: BuildResult;
-  boardyDir: string;
+  boardryDir: string;
   files: { path: string; content: string }[];
   onSelect: (id: string) => void;
   onCreateChild: (id: string) => void;
@@ -425,12 +304,12 @@ export function GraphView({
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const [dragLayer, setDragLayer] = useState<string | null>(null);
-  const draggingRef = useRef(false);
-  const [instance, setInstance] = useState<ReactFlowInstance<BoardyNode> | null>(null);
+  const [highlighted, setHighlighted] = useState<string[]>([]);
+  const [instance, setInstance] = useState<ReactFlowInstance<BoardryNode> | null>(null);
   const colorScheme = useComputedColorScheme("light");
   const edgeStroke = colorScheme === "dark" ? "#34343a" : "#9a9aa0";
 
-  const { computedNodes, edges } = useMemo(() => {
+  const { computedNodes, edges, boxes } = useMemo(() => {
     const graph = result.graph.graph;
     const exported = graph.export();
     const parentEdges = exported.edges.filter((edge) =>
@@ -442,7 +321,6 @@ export function GraphView({
     for (const edge of parentEdges) {
       connectedIds.add(edge.source);
       connectedIds.add(edge.target);
-      // refines/part_of go child -> parent, so remember parent -> [children].
       if (!children.has(edge.target)) children.set(edge.target, []);
       children.get(edge.target)!.push(edge.source);
     }
@@ -458,20 +336,64 @@ export function GraphView({
       }
     }
 
-    const layerIndex = new Map(result.layers.map((layer, i) => [layer, i]));
-
+    const connected = result.notes.filter((note) => connectedIds.has(note.id));
     const byLayer = new Map<string, Note[]>();
-    for (const note of result.notes) {
-      if (!connectedIds.has(note.id) || hidden.has(note.id)) continue;
+    for (const note of connected) {
       const key = note.layer ?? "(none)";
       if (!byLayer.has(key)) byLayer.set(key, []);
       byLayer.get(key)!.push(note);
     }
 
-    const computedNodes: BoardyNode[] = [];
-    for (const [layer, notes] of byLayer) {
-      const row = layerIndex.get(layer) ?? result.layers.length;
+    const specs: { layer: string; cols: number; rows: number; width: number; height: number }[] = [];
+    for (const layer of result.layers) {
+      const notes = byLayer.get(layer);
+      if (!notes || notes.length === 0) continue;
+      const cols = Math.max(1, Math.ceil(Math.sqrt(notes.length)));
+      const rows = Math.ceil(notes.length / cols);
+      specs.push({
+        layer,
+        cols,
+        rows,
+        width: cols * X_STEP + BOX_PAD * 2,
+        height: LABEL_H + rows * Y_STEP + BOX_PAD,
+      });
+    }
+
+    const MAX_ROW_W = 1600;
+    const boxes: LayerBox[] = [];
+    let cursorX = 0;
+    let cursorY = 0;
+    let rowHeight = 0;
+    for (const spec of specs) {
+      if (cursorX > 0 && cursorX + spec.width > MAX_ROW_W) {
+        cursorX = 0;
+        cursorY += rowHeight + BOX_GAP;
+        rowHeight = 0;
+      }
+      boxes.push({
+        layer: spec.layer,
+        left: cursorX,
+        top: cursorY,
+        width: spec.width,
+        height: spec.height,
+      });
+      cursorX += spec.width + BOX_GAP;
+      rowHeight = Math.max(rowHeight, spec.height);
+    }
+
+    const boxByLayer = new Map(boxes.map((box) => [box.layer, box]));
+    const computedNodes: BoardryNode[] = [];
+    for (const spec of specs) {
+      const box = boxByLayer.get(spec.layer)!;
+      const notes = byLayer.get(spec.layer)!;
       notes.forEach((note, i) => {
+        if (hidden.has(note.id)) return;
+        const col = i % spec.cols;
+        const row = Math.floor(i / spec.cols);
+        const position = {
+          x: box.left + BOX_PAD + col * X_STEP,
+          y: box.top + LABEL_H + row * Y_STEP,
+        };
         const base = note.id.split("/").pop() ?? note.id;
         const brainstorm = result.brainstorming
           .filter((item) => {
@@ -483,14 +405,14 @@ export function GraphView({
           .map((item) => item.body.trim())
           .filter(Boolean)
           .join("\n\n");
-        const iconColor = note.icon?.color ?? COLORS[layer] ?? "#888888";
+        const iconColor = note.icon?.color ?? COLORS[spec.layer] ?? "#888888";
         computedNodes.push({
           id: note.id,
-          type: "boardy",
-          position: { x: i * X_STEP, y: row * Y_STEP },
+          type: "boardry",
+          position,
           data: {
             label: note.title,
-            layer,
+            layer: spec.layer,
             color: iconColor,
             iconName: note.icon?.name ?? defaultIconFor(note.id),
             iconColor,
@@ -499,6 +421,8 @@ export function GraphView({
             brainstorm,
             collapsed: collapsed.has(note.id),
             childCount: (children.get(note.id) ?? []).length,
+            dimmed: highlighted.length > 0 && !highlighted.includes(note.id),
+            highlighted: highlighted.includes(note.id),
           },
         });
       });
@@ -515,10 +439,10 @@ export function GraphView({
         type: "smart",
       }));
 
-    return { computedNodes, edges };
-  }, [result, collapsed]);
+    return { computedNodes, edges, boxes };
+  }, [result, collapsed, highlighted]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<BoardyNode>(computedNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState<BoardryNode>(computedNodes);
 
   useEffect(() => {
     setNodes((current) => {
@@ -529,16 +453,6 @@ export function GraphView({
       });
     });
   }, [computedNodes, setNodes]);
-
-  useEffect(() => {
-    if (draggingRef.current) return;
-    if (nodes.length === 0) return;
-    if (nodes.some((node) => !node.measured?.width)) return;
-    const resolved = stackLayers(avoidOverlaps(nodes), result.layers);
-    if (resolved.some((node, index) => node !== nodes[index])) {
-      setNodes(resolved);
-    }
-  }, [nodes, setNodes, result.layers]);
 
   const toggle = useCallback((id: string) => {
     setExpanded((prev) => {
@@ -563,52 +477,55 @@ export function GraphView({
     });
   }, []);
 
-  const onNodeDrag = useCallback(
-    (_: MouseEvent | TouchEvent, node: BoardyNode) => {
-      const row = Math.max(
-        0,
-        Math.min(result.layers.length - 1, Math.round(node.position.y / Y_STEP)),
-      );
-      setDragLayer(result.layers[row] ?? null);
+  const nearestBox = useCallback(
+    (position: { x: number; y: number }) => {
+      let best: LayerBox | null = null;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      for (const box of boxes) {
+        const cx = box.left + box.width / 2;
+        const cy = box.top + box.height / 2;
+        const distance = Math.hypot(position.x - cx, position.y - cy);
+        if (distance < bestDistance) {
+          best = box;
+          bestDistance = distance;
+        }
+      }
+      return best;
     },
-    [result.layers],
+    [boxes],
   );
 
-  const onNodeDragStart = useCallback(() => {
-    draggingRef.current = true;
-  }, []);
+  const onNodeDrag = useCallback(
+    (_: MouseEvent | TouchEvent, node: BoardryNode) => {
+      setDragLayer(nearestBox(node.position)?.layer ?? null);
+    },
+    [nearestBox],
+  );
 
   const onNodeDragStop = useCallback(
-    async (_: MouseEvent | TouchEvent, node: BoardyNode) => {
-      draggingRef.current = false;
+    async (_: MouseEvent | TouchEvent, node: BoardryNode) => {
       setDragLayer(null);
       const note = result.notes.find((n) => n.id === node.id);
       if (!note) return;
-      const currentRow = result.layers.indexOf(note.layer ?? "");
-      if (currentRow < 0) return;
-      const targetRow = Math.max(
-        0,
-        Math.min(result.layers.length - 1, Math.round(node.position.y / Y_STEP)),
-      );
-      if (targetRow === currentRow) return;
-      const targetLayer = result.layers[targetRow];
-      if (!targetLayer) return;
+      const targetLayer = nearestBox(node.position)?.layer;
+      if (!targetLayer || targetLayer === note.layer) return;
       const filename = note.path.split("/").pop() ?? `${node.id}.md`;
       const to = `${targetLayer}/${filename}`;
       const content = setLayer(note.raw, targetLayer);
       try {
-        await moveNote(boardyDir, note.path, to, content);
+        await moveNote(boardryDir, note.path, to, content);
         onMoved();
       } catch (e) {
         console.error(e);
       }
     },
-    [result, boardyDir, onMoved],
+    [result, boardryDir, onMoved, nearestBox],
   );
 
   const reset = useCallback(() => {
     setExpanded(new Set());
     setCollapsed(new Set());
+    setHighlighted([]);
     setNodes(computedNodes);
     instance?.fitView({ duration: 300 });
   }, [computedNodes, setNodes, instance]);
@@ -632,28 +549,31 @@ export function GraphView({
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
       <GraphActions.Provider value={actions}>
         <SmartEdgeProvider nodes={nodes} options={{ routeWhileDragging: true }}>
-          <ReactFlow<BoardyNode>
+          <ReactFlow<BoardryNode>
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
             onNodeClick={(_, node) => toggle(node.id)}
+            onPaneClick={() => setHighlighted([])}
             onNodeDrag={onNodeDrag}
-            onNodeDragStart={onNodeDragStart}
             onNodeDragStop={onNodeDragStop}
             onInit={setInstance}
             fitView
             nodesDraggable
-            snapToGrid
-            snapGrid={[1, Y_STEP]}
             defaultEdgeOptions={{ style: { strokeWidth: 1.5, stroke: edgeStroke } }}
           >
             <Background color={colorScheme === "dark" ? "#161616" : "#e4e4e4"} />
             <Controls />
             <MiniMap pannable zoomable position="bottom-right" />
             <Panel position="top-left">
-              <CommandBox result={result} files={files} onOpen={onSelect} />
+              <CommandBox
+                result={result}
+                files={files}
+                onOpen={onSelect}
+                onHighlight={setHighlighted}
+              />
             </Panel>
             <Panel position="top-right">
               <Group gap="xs">
@@ -665,12 +585,7 @@ export function GraphView({
                 </Button>
               </Group>
             </Panel>
-            <LayerBands
-              layers={result.layers}
-              nodes={nodes}
-              activeLayer={dragLayer}
-              onLayerClick={onLayerClick}
-            />
+            <LayerBoxes boxes={boxes} activeLayer={dragLayer} onLayerClick={onLayerClick} />
           </ReactFlow>
         </SmartEdgeProvider>
       </GraphActions.Provider>

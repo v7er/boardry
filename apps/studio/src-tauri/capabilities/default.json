@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "default capability for boardy Studio",
+  "description": "default capability for boardry Studio",
   "windows": ["main"],
   "permissions": [
     "core:default",

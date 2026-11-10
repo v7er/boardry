@@ -1,15 +1,15 @@
 {
-  "name": "@boardy/skills",
+  "name": "@boardry/skills",
   "version": "0.1.0",
-  "description": "boardy agent skills: query the knowledge base and write notes",
+  "description": "boardry agent skills: query the knowledge base and write notes",
   "type": "module",
   "bin": {
-    "boardy-skills": "./install.mjs"
+    "boardry-skills": "./install.mjs"
   },
   "files": [
     "install.mjs",
-    "boardy-ask",
-    "boardy-note"
+    "boardry-ask",
+    "boardry-note"
   ],
   "license": "MIT"
 }

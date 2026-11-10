@@ -10,7 +10,7 @@ import {
   TextInput,
   useComputedColorScheme,
 } from "@mantine/core";
-import { saveNote } from "./boardy";
+import { saveNote } from "./boardry";
 import { MarkdownEditor } from "./MarkdownEditor";
 
 function slugify(value: string): string {
@@ -26,7 +26,7 @@ export function NewNoteModal({
   opened,
   onClose,
   layers,
-  boardyDir,
+  boardryDir,
   parentId,
   defaultLayer,
   onCreated,
@@ -34,7 +34,7 @@ export function NewNoteModal({
   opened: boolean;
   onClose: () => void;
   layers: string[];
-  boardyDir: string;
+  boardryDir: string;
   parentId?: string;
   defaultLayer?: string;
   onCreated: (id: string) => void;
@@ -66,7 +66,7 @@ export function NewNoteModal({
       const body = content.trim();
       const note = body ? `${lines.join("\n")}\n${body}\n` : lines.join("\n");
       const path = `${effectiveLayer}/${slugify(name)}.md`;
-      await saveNote(boardyDir, path, note);
+      await saveNote(boardryDir, path, note);
       setName("");
       setContent("");
       onCreated(path.replace(/\.md$/, ""));

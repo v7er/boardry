@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal, TextInput, List, Text } from "@mantine/core";
-import type { BuildResult } from "@boardy/core";
+import type { BuildResult } from "@boardry/core";
 
 export function CommandPalette({
   opened,

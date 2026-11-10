@@ -1,5 +1,5 @@
 {
-  "name": "@boardy/studio",
+  "name": "@boardry/studio",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@boardy/core": "workspace:*",
+    "@boardry/core": "workspace:*",
     "@lexical/rich-text": "^0.48.0",
     "@mantine/core": "^7.15.1",
     "@mantine/hooks": "^7.15.1",

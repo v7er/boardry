@@ -16,8 +16,8 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconMoon, IconSearch, IconSun } from "@tabler/icons-react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { updateFrontmatter, type BuildResult } from "@boardy/core";
-import { deleteNote, loadBoardy, moveNote, readLayerIndex, saveNote, setLayer } from "./boardy";
+import { updateFrontmatter, type BuildResult } from "@boardry/core";
+import { deleteNote, loadBoardry, moveNote, readLayerIndex, saveNote, setLayer } from "./boardry";
 import { loadAiSettings, saveAiSettings, type AiSettings } from "./ai";
 import { loadProjects, newProject, saveProjects, type Project } from "./projects";
 import { ProjectSidebar } from "./ProjectSidebar";
@@ -37,7 +37,7 @@ function signature(result: BuildResult): string {
 
 interface CachedProject {
   result: BuildResult;
-  boardyDir: string;
+  boardryDir: string;
   files: { path: string; content: string }[];
 }
 
@@ -72,7 +72,7 @@ export default function App() {
   );
   const cached = active ? cache[active.id] : undefined;
   const result = cached?.result ?? null;
-  const boardyDir = cached?.boardyDir ?? "";
+  const boardryDir = cached?.boardryDir ?? "";
   const files = cached?.files ?? [];
 
   const standalone = useMemo(() => {
@@ -93,16 +93,16 @@ export default function App() {
     if (!silent) setLoading(true);
     setError("");
     try {
-      const loaded = await loadBoardy(project.path);
+      const loaded = await loadBoardry(project.path);
       if (!loaded) {
-        setError("No .boardy/ folder found in that folder.");
+        setError("No .boardry/ folder found in that folder.");
         return;
       }
       setCache((prev) => ({
         ...prev,
         [project.id]: {
           result: loaded.result,
-          boardyDir: loaded.boardyDir,
+          boardryDir: loaded.boardryDir,
           files: loaded.files,
         },
       }));
@@ -125,7 +125,7 @@ export default function App() {
     if (!active) return;
     let cancelled = false;
     const tick = async () => {
-      const loaded = await loadBoardy(active.path);
+      const loaded = await loadBoardry(active.path);
       if (cancelled || !loaded) return;
       const sig = signature(loaded.result);
       if (sig === lastSig.current[active.id]) return;
@@ -134,7 +134,7 @@ export default function App() {
         ...prev,
         [active.id]: {
           result: loaded.result,
-          boardyDir: loaded.boardyDir,
+          boardryDir: loaded.boardryDir,
           files: loaded.files,
         },
       }));
@@ -201,40 +201,40 @@ export default function App() {
 
   const setIcon = useCallback(
     async (id: string, name: string, color: string) => {
-      if (!result || !boardyDir) return;
+      if (!result || !boardryDir) return;
       const note = result.notes.find((item) => item.id === id);
       if (!note) return;
       const content = updateFrontmatter(note.raw, { icon: { name, color } });
-      await saveNote(boardyDir, note.path, content);
+      await saveNote(boardryDir, note.path, content);
       await reloadActive();
     },
-    [result, boardyDir, reloadActive],
+    [result, boardryDir, reloadActive],
   );
 
   const openLayer = useCallback(
     async (layer: string) => {
-      const found = await readLayerIndex(boardyDir, layer);
+      const found = await readLayerIndex(boardryDir, layer);
       setLayerIndex(
         found
           ? { layer, path: found.path, content: found.content }
           : { layer, path: `${layer}/index.md`, content: "" },
       );
     },
-    [boardyDir],
+    [boardryDir],
   );
 
   const saveLayer = useCallback(
     async (content: string) => {
       if (!layerIndex) return;
-      await saveNote(boardyDir, layerIndex.path, content);
+      await saveNote(boardryDir, layerIndex.path, content);
       setLayerIndex({ ...layerIndex, content });
     },
-    [layerIndex, boardyDir],
+    [layerIndex, boardryDir],
   );
 
   const moveFile = useCallback(
     async (from: string, toDir: string) => {
-      if (!boardyDir) return;
+      if (!boardryDir) return;
       const filename = from.split("/").pop() ?? from;
       const to = toDir ? `${toDir}/${filename}` : filename;
       if (to === from) return;
@@ -242,10 +242,10 @@ export default function App() {
       if (!source) return;
       const isLayer = result?.layers.includes(toDir) ?? false;
       const content = isLayer ? setLayer(source.content, toDir) : source.content;
-      await moveNote(boardyDir, from, to, content);
+      await moveNote(boardryDir, from, to, content);
       await reloadActive();
     },
-    [boardyDir, files, result, reloadActive],
+    [boardryDir, files, result, reloadActive],
   );
 
   useEffect(() => {
@@ -288,12 +288,12 @@ export default function App() {
   );
 
   const confirmDelete = useCallback(async () => {
-    if (!deleteTargetNote || !boardyDir) return;
-    await deleteNote(boardyDir, deleteTargetNote.path);
+    if (!deleteTargetNote || !boardryDir) return;
+    await deleteNote(boardryDir, deleteTargetNote.path);
     setDeleteTarget(null);
     setSelectedId(null);
     await reloadActive();
-  }, [deleteTargetNote, boardyDir, reloadActive]);
+  }, [deleteTargetNote, boardryDir, reloadActive]);
 
   const openNewNoteFor = useCallback(
     (parentId: string | null) => {
@@ -321,7 +321,7 @@ export default function App() {
           <Group gap="xs" wrap="nowrap">
             <img
               src={logo}
-              alt="boardy"
+              alt="boardry"
               height={28}
               draggable={false}
               style={{ borderRadius: 6, display: "block" }}
@@ -379,7 +379,7 @@ export default function App() {
           <Box style={{ flex: 1, position: "relative", minWidth: 0, overflow: "hidden" }}>
             {!active && (
               <Text p="lg" c="dimmed">
-                Add a project folder to start. Pick either the project root or the .boardy folder.
+                Add a project folder to start. Pick either the project root or the .boardry folder.
               </Text>
             )}
             {active && !result && !error && (
@@ -395,7 +395,7 @@ export default function App() {
             {result && !loading && view === "graph" && (
               <GraphView
                 result={result}
-                boardyDir={boardyDir}
+                boardryDir={boardryDir}
                 files={files}
                 onSelect={setSelectedId}
                 onCreateChild={(id) => openNewNoteFor(id)}
@@ -409,7 +409,7 @@ export default function App() {
                 result={result}
                 files={files}
                 onSave={async (path, content) => {
-                  await saveNote(boardyDir, path, content);
+                  await saveNote(boardryDir, path, content);
                   await reloadActive();
                 }}
                 onDelete={setDeleteTarget}
@@ -452,7 +452,7 @@ export default function App() {
             ))}
           </Group>
         )}
-        {selectedNote && boardyDir && result && (
+        {selectedNote && boardryDir && result && (
           <NoteEditor
             key={selectedNote.id}
             note={selectedNote}
@@ -460,7 +460,7 @@ export default function App() {
             onOpen={setSelectedId}
             onDelete={() => setDeleteTarget(selectedNote.id)}
             onSave={async (content) => {
-              await saveNote(boardyDir, selectedNote.path, content);
+              await saveNote(boardryDir, selectedNote.path, content);
               await reloadActive();
             }}
           />
@@ -505,7 +505,7 @@ export default function App() {
           opened={newNoteOpen}
           onClose={closeNewNote}
           layers={result.layers}
-          boardyDir={boardyDir}
+          boardryDir={boardryDir}
           parentId={newNoteParent ?? undefined}
           defaultLayer={newNoteDefaultLayer}
           onCreated={(id) => {

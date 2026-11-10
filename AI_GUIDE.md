@@ -1,4 +1,4 @@
-# boardy
+# boardry
 
 **The document centre for your product.** Layers you define in `index.md`, linked into one graph, with AI skills mapped onto every part.
 
@@ -7,7 +7,7 @@
 
 ## Detailed specs
 
-- [CLI](./docs/CLI.md) - the `boardy` command line: commands, behavior, and tech.
+- [CLI](./docs/CLI.md) - the `boardry` command line: commands, behavior, and tech.
 - [Studio](./docs/STUDIO.md) - the desktop app: features and tech.
 - [Core](./docs/CORE.md) - the shared graph and index engine.
 
@@ -15,9 +15,9 @@
 
 | Without a document centre | With a document centre |
 |---|---|
-| Knowledge lives in chat, tickets, and one person's head | Every decision, feature, and term is one markdown file in `.boardy/` |
+| Knowledge lives in chat, tickets, and one person's head | Every decision, feature, and term is one markdown file in `.boardry/` |
 | A new person or agent re-learns the product from scratch | They start from the notes the team already wrote |
-| No single place answers "why is it built this way?" | `boardy ask` returns the note that decided it, with who and why |
+| No single place answers "why is it built this way?" | `boardry ask` returns the note that decided it, with who and why |
 | Docs drift because they live apart from the code | Notes sit next to the code and travel with it |
 | Changing one part without knowing what it touches | The graph shows what depends on it before you edit |
 
@@ -47,9 +47,9 @@
 
 The knowledge base is a waterfall of layers, from the broadest at the top to the most concrete at the bottom. A wrapper, LayerAI, sits around the whole thing and maps AI skills, tools, and agents onto every part. Everything is linked into one graph.
 
-**The notes.** A folder at the project root, `.boardy/`, holds one markdown file per piece of knowledge. Each note states which layer it belongs to.
+**The notes.** A folder at the project root, `.boardry/`, holds one markdown file per piece of knowledge. Each note states which layer it belongs to.
 
-**The layers.** An `index.md` at the root of `.boardy/` declares the layers and their order. There is no fixed set: each project names its own layers. The tool reads `index.md` to draw the waterfall.
+**The layers.** An `index.md` at the root of `.boardry/` declares the layers and their order. There is no fixed set: each project names its own layers. The tool reads `index.md` to draw the waterfall.
 
 **LayerAI.** Around the waterfall, not part of it. For any note, module, or layer, LayerAI records which skill, tool, or agent fits there. It answers "what AI capability should I reach for here?"
 
@@ -61,7 +61,7 @@ The notes say *what* the product is and *why*. The layers say *how abstract or c
 
 ## The layers
 
-The layers are not fixed. Each `.boardy/` folder has an `index.md` at its root that declares which folders are layers, in order from top to bottom.
+The layers are not fixed. Each `.boardry/` folder has an `index.md` at its root that declares which folders are layers, in order from top to bottom.
 
 ```markdown
 ---
@@ -76,7 +76,7 @@ layers:
 ---
 ```
 
-Each entry in `layers` names a folder inside `.boardy/`, and the order is the waterfall order. A note's `layer` field holds one of these names. The tool reads `index.md` to draw the stack, so changing the list changes the stack. Nothing is hardcoded.
+Each entry in `layers` names a folder inside `.boardry/`, and the order is the waterfall order. A note's `layer` field holds one of these names. The tool reads `index.md` to draw the stack, so changing the list changes the stack. Nothing is hardcoded.
 
 The six layers above are one common shape, not a requirement:
 
@@ -177,7 +177,7 @@ Where everything lives:
 
 ```text
 your-project/
-└── .boardy/                the notes (commit them)
+└── .boardry/                the notes (commit them)
     ├── .gitignore              ignores .index/
     ├── index.md                declares the layers and their order
     ├── brief.md                layer: brief
@@ -190,7 +190,7 @@ your-project/
     └── .index/                 the derived index, a local cache (gitignored)
 ```
 
-`.boardy/` is the source of truth and is committed with the code. Its `index.md` declares the layers and their order. The derived index lives in `.boardy/.index/`, is rebuilt from the notes, and stays out of git through `.boardy/.gitignore`. A note's `layer` field, not its directory, is what places it.
+`.boardry/` is the source of truth and is committed with the code. Its `index.md` declares the layers and their order. The derived index lives in `.boardry/.index/`, is rebuilt from the notes, and stays out of git through `.boardry/.gitignore`. A note's `layer` field, not its directory, is what places it.
 
 ## The graph
 
@@ -216,7 +216,7 @@ Every component has a place in the graph, and every note links to the notes arou
 
 Select a node in Studio and its edges take on direction: one color for what it depends on or refines, another for what depends on or refines it, with the verb written on each edge. Edges typed in the frontmatter draw solid; links inferred from a bare `[[wikilink]]` draw dashed.
 
-The graph also computes, with no model involved: backlinks, orphan notes (nothing points at them), broken links (a wikilink to a note that does not exist), and broken waterfall (a lower-layer note with no upper-layer note it refines). These surface in `boardy check` and in Studio as warnings. Notes marked `type: brainstorming` never enter the graph.
+The graph also computes, with no model involved: backlinks, orphan notes (nothing points at them), broken links (a wikilink to a note that does not exist), and broken waterfall (a lower-layer note with no upper-layer note it refines). These surface in `boardry check` and in Studio as warnings. Notes marked `type: brainstorming` never enter the graph.
 
 ## Quick start (planned)
 
@@ -224,80 +224,80 @@ The graph also computes, with no model involved: backlinks, orphan notes (nothin
 > These commands do not exist yet. They are the target interface, written down so the shape of the tool is clear before it is built.
 
 ```bash
-boardy init                              # create .boardy/ with index.md, .gitignore, and the starter notes
-boardy index                             # parse the markdown and build the graph index in .boardy/.index/
-boardy layers                            # list the layers from index.md and the notes in each
-boardy ask "why do refunds go through the ledger?"   # the matching notes and their links, with file:line
-boardy fit billing-api                   # what LayerAI maps onto billing-api: skills, tools, agents
-boardy add --layer technical             # open a note template for a layer
-boardy link "[[a]]" "[[b]]" --type refines   # add a waterfall or typed edge
-boardy check                             # report orphans, broken links, and broken waterfall
-boardy status                            # note count, link count, and what changed since the last index
+boardry init                              # create .boardry/ with index.md, .gitignore, and the starter notes
+boardry index                             # parse the markdown and build the graph index in .boardry/.index/
+boardry layers                            # list the layers from index.md and the notes in each
+boardry ask "why do refunds go through the ledger?"   # the matching notes and their links, with file:line
+boardry fit billing-api                   # what LayerAI maps onto billing-api: skills, tools, agents
+boardry add --layer technical             # open a note template for a layer
+boardry link "[[a]]" "[[b]]" --type refines   # add a waterfall or typed edge
+boardry check                             # report orphans, broken links, and broken waterfall
+boardry status                            # note count, link count, and what changed since the last index
 ```
 
 The workflow in practice:
 
 ```bash
-boardy init
+boardry init
 # write the brief, then the components, then prototypes, then the rest
-boardy index
-boardy layers
-boardy fit "refund-endpoint"
+boardry index
+boardry layers
+boardry fit "refund-endpoint"
 ```
 
-`boardy` reads the folder directly and only rebuilds what changed, so the index stays current with uncommitted edits.
+`boardry` reads the folder directly and only rebuilds what changed, so the index stays current with uncommitted edits.
 
 ## CLI (planned)
 
-`boardy --help` groups the commands into five sets.
+`boardry --help` groups the commands into five sets.
 
 ```bash
 # query
-boardy ask "<question>"                 # ranked notes and their links (no LLM, no key)
-boardy search "<term>"                  # full-text search over notes
-boardy show <path>                      # print a note
-boardy links <path>                     # every edge into and out of a note
-boardy backlinks <path>                 # every note that points at this one
+boardry ask "<question>"                 # ranked notes and their links (no LLM, no key)
+boardry search "<term>"                  # full-text search over notes
+boardry show <path>                      # print a note
+boardry links <path>                     # every edge into and out of a note
+boardry backlinks <path>                 # every note that points at this one
 
 # layers
-boardy layers                           # the layers from index.md and their notes, top to bottom
-boardy brief                            # the first layer, the vision
-boardy components                       # the components layer and submodules
-boardy fit <path>                       # what LayerAI maps onto a note, module, or layer
+boardry layers                           # the layers from index.md and their notes, top to bottom
+boardry brief                            # the first layer, the vision
+boardry components                       # the components layer and submodules
+boardry fit <path>                       # what LayerAI maps onto a note, module, or layer
 
 # write
-boardy add --layer <layer>              # open a template for a new note in a layer
-boardy link <a> <b> --type <verb>       # add a typed edge to both notes
-boardy unlink <a> <b>                   # remove an edge
-boardy note "<title>" --layer <layer>   # add a note from text on stdin
+boardry add --layer <layer>              # open a template for a new note in a layer
+boardry link <a> <b> --type <verb>       # add a typed edge to both notes
+boardry unlink <a> <b>                   # remove an edge
+boardry note "<title>" --layer <layer>   # add a note from text on stdin
 
 # index and check
-boardy init                             # set up the folder and gitignore
-boardy index                            # rebuild the graph index
-boardy index --watch                    # re-index as files change
-boardy check                            # orphans, broken links, broken waterfall (exit 1 on a problem)
+boardry init                             # set up the folder and gitignore
+boardry index                            # rebuild the graph index
+boardry index --watch                    # re-index as files change
+boardry check                            # orphans, broken links, broken waterfall (exit 1 on a problem)
 
 # status and tools
-boardy status                           # counts and what changed
-boardy serve                            # a local read-only graph viewer (no Tauri needed)
-boardy --version
+boardry status                           # counts and what changed
+boardry serve                            # a local read-only graph viewer (no Tauri needed)
+boardry --version
 ```
 
-`boardy ask`, `boardy search`, `boardy layers`, and `boardy fit` are deterministic: they never call a model and never need a key. They rank notes by text match and by graph connectivity, so a note many others point at ranks higher.
+`boardry ask`, `boardry search`, `boardry layers`, and `boardry fit` are deterministic: they never call a model and never need a key. They rank notes by text match and by graph connectivity, so a note many others point at ranks higher.
 
 ## Skills for AI agents
 
-The skills teach an agent to treat `.boardy/` as its first stop, the same way it treats the code.
+The skills teach an agent to treat `.boardry/` as its first stop, the same way it treats the code.
 
-- **Before answering a question** about the product, the agent runs `boardy ask` and reads the matching notes.
-- **Before changing code** that a decision or convention covers, the agent reads that note and runs `boardy check` for conflicts.
+- **Before answering a question** about the product, the agent runs `boardry ask` and reads the matching notes.
+- **Before changing code** that a decision or convention covers, the agent reads that note and runs `boardry check` for conflicts.
 - **Before picking a library**, the agent checks the whitelist layer and does not reach for anything outside it.
-- **Before starting a task on a part**, the agent runs `boardy fit` to see which skill or tool the team already mapped to it.
+- **Before starting a task on a part**, the agent runs `boardry fit` to see which skill or tool the team already mapped to it.
 - **After working something out**, the agent offers to save it as a note in the right layer. It never saves one on its own, and never edits an existing note without being asked.
 
 The skills are plain files the agent already reads, so no server and no daemon is involved. For Claude Code, a `SKILL.md` in `.claude/skills/`. For Cursor, a rule file. For Codex and other CLIs, a section in `AGENTS.md`. Each says the same thing: where the folder is, how to query it, and when to write to it.
 
-A teammate's agent reads the notes even before installing `boardy`, because the notes are committed files. The skill only points the agent at them.
+A teammate's agent reads the notes even before installing `boardry`, because the notes are committed files. The skill only points the agent at them.
 
 ## Studio (Tauri desktop app)
 
@@ -318,7 +318,7 @@ Tauri 2 and TypeScript. All product code is TypeScript; Rust appears only as the
 
 **Toolchain.** TypeScript in strict mode, Node.js 22 or newer, and a pnpm monorepo (`pnpm-workspace.yaml`) with `turbo` to run build, test, and lint across the packages.
 
-**Shared core (`packages/core`, published as `@boardy/core`, pure TypeScript, no file I/O).**
+**Shared core (`packages/core`, published as `@boardry/core`, pure TypeScript, no file I/O).**
 
 - `unified` with `remark-parse`, `remark-gfm`, `remark-wiki-link`, and `remark-frontmatter` parses markdown, tables, `[[wikilinks]]`, and frontmatter.
 - `yaml` parses the frontmatter block.
@@ -328,14 +328,14 @@ Tauri 2 and TypeScript. All product code is TypeScript; Rust appears only as the
 
 The core takes text in and returns a graph and an index out. It never touches the file system, so the CLI and Studio feed it the same way and cannot disagree about how a note is parsed.
 
-**CLI (`packages/cli`, published as `@boardy/cli`, Node).**
+**CLI (`packages/cli`, published as `@boardry/cli`, Node).**
 
 - `commander` for commands and flags.
-- `@clack/prompts` for the interactive prompts in `boardy init` and `boardy add`.
+- `@clack/prompts` for the interactive prompts in `boardry init` and `boardry add`.
 - `chalk` for terminal output.
 - `fast-glob` to discover notes.
-- `chokidar` to watch for changes in `boardy index --watch`.
-- `sirv` for the local read-only viewer behind `boardy serve`.
+- `chokidar` to watch for changes in `boardry index --watch`.
+- `sirv` for the local read-only viewer behind `boardry serve`.
 - `tsup` bundles the CLI into a single file.
 
 **Studio (`apps/studio`, Tauri 2 + React + TypeScript).**
@@ -354,14 +354,14 @@ The core takes text in and returns a graph and an index out. It never touches th
 
 ## What runs where
 
-- **On your machine, no key, no network.** Parsing, indexing, graph building, search, `boardy check`, and the Studio views are deterministic TypeScript. They never call a model.
+- **On your machine, no key, no network.** Parsing, indexing, graph building, search, `boardry check`, and the Studio views are deterministic TypeScript. They never call a model.
 - **Through your provider key.** Only the AI assistant's summaries and link suggestions. Studio sends them to the provider you configure, under your key, over the endpoint you set.
 - **Nowhere else.** There is no server. Notes are files in your repo, shared through git like any other file.
 
 ## What stays on your machine
 
 - **Your notes.** They are markdown files in your repo. You decide what to commit and what to keep local.
-- **The index.** Derived in `.boardy/.index/`, rebuilt from the notes, and gitignored.
+- **The index.** Derived in `.boardry/.index/`, rebuilt from the notes, and gitignored.
 - **Your assistant prompts.** Sent only to the provider you configure, under your key. The tool does not store or forward them.
 
 ## Planned layout

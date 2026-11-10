@@ -4,7 +4,7 @@ export interface Project {
   path: string;
 }
 
-const STORAGE_KEY = "boardy.projects";
+const STORAGE_KEY = "boardry.projects";
 
 function isProject(value: unknown): value is Project {
   if (typeof value !== "object" || value === null) return false;

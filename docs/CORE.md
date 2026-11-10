@@ -43,4 +43,4 @@ watch(dir, cb)    -> unwatch
 - `graphology` for the graph.
 - `minisearch` for the index.
 
-Published as `@boardy/core`.
+Published as `@boardry/core`.

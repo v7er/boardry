@@ -1,6 +1,9 @@
 {
-  "name": "@boardy/core",
+  "name": "@boardry/core",
   "version": "0.1.0",
+  "description": "The pure TypeScript graph engine and note parser behind boardry.",
+  "license": "MIT",
+  "keywords": ["boardry", "knowledge-base", "markdown", "graph", "search"],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,10 +13,15 @@
       "import": "./dist/index.js"
     }
   },
+  "files": ["dist"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "graphology": "^0.25.4",

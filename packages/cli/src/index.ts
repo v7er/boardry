@@ -6,8 +6,8 @@ import path from "node:path";
 import { createServer } from "node:http";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import sirv from "sirv";
-import { loadKnowledge, findBoardyDir, findNote, loadOpenWiki, loadQaEntries } from "./context.js";
-import { buildRagContext, buildBridge, matchQa, mergeKnowledge, openwikiToNotes } from "@boardy/core";
+import { loadKnowledge, findBoardryDir, findNote, loadOpenWiki, loadQaEntries } from "./context.js";
+import { buildRagContext, buildBridge, matchQa, mergeKnowledge, openwikiToNotes } from "@boardry/core";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
@@ -16,15 +16,15 @@ const execAsync = promisify(exec);
 const program = new Command();
 
 program
-  .name("boardy")
+  .name("boardry")
   .description("The document centre for your product")
   .version("0.1.0");
 
-let boardyPath: string | undefined;
+let boardryPath: string | undefined;
 
 program.hook("preAction", (_thisCommand, actionCommand) => {
   const opts = actionCommand.opts() as { path?: string };
-  boardyPath = opts.path;
+  boardryPath = opts.path;
 });
 
 const DEFAULT_LAYERS = "brief,components,prototypes,modules,technical,whitelist";
@@ -58,18 +58,18 @@ function editLinks(
 }
 
 async function loadOrFail() {
-  const loaded = await loadKnowledge(process.cwd(), boardyPath);
+  const loaded = await loadKnowledge(process.cwd(), boardryPath);
   if (!loaded) {
-    console.error(chalk.red("No .boardy/ folder found. Run `boardy init` first."));
+    console.error(chalk.red("No .boardry/ folder found. Run `boardry init` first."));
     process.exit(1);
   }
   return loaded;
 }
 
-async function boardyDirOrFail() {
-  const dir = await findBoardyDir(process.cwd(), boardyPath);
+async function boardryDirOrFail() {
+  const dir = await findBoardryDir(process.cwd(), boardryPath);
   if (!dir) {
-    console.error(chalk.red("No .boardy/ folder found. Run `boardy init` first."));
+    console.error(chalk.red("No .boardry/ folder found. Run `boardry init` first."));
     process.exit(1);
   }
   return dir;
@@ -86,19 +86,19 @@ async function readStdin(): Promise<string> {
 
 program
   .command("init")
-  .description("set up .boardy/ with index.md, .gitignore, and starter notes")
+  .description("set up .boardry/ with index.md, .gitignore, and starter notes")
   .option("--layers <names>", "comma-separated layer list", DEFAULT_LAYERS)
   .action(async (opts: { layers: string }) => {
-    const boardyDir = boardyPath ? path.resolve(boardyPath) : path.join(process.cwd(), ".boardy");
+    const boardryDir = boardryPath ? path.resolve(boardryPath) : path.join(process.cwd(), ".boardry");
     const layers = opts.layers.split(",").map((s) => s.trim()).filter(Boolean);
 
-    await fs.mkdir(boardyDir, { recursive: true });
+    await fs.mkdir(boardryDir, { recursive: true });
     const indexMd = `---\ntitle: Layers\nlayers:\n${layers.map((l) => `  - ${l}`).join("\n")}\n---\n`;
-    await fs.writeFile(path.join(boardyDir, "index.md"), indexMd);
-    await fs.writeFile(path.join(boardyDir, ".gitignore"), ".index/\n");
+    await fs.writeFile(path.join(boardryDir, "index.md"), indexMd);
+    await fs.writeFile(path.join(boardryDir, ".gitignore"), ".index/\n");
 
     for (const layer of layers) {
-      const layerDir = path.join(boardyDir, layer);
+      const layerDir = path.join(boardryDir, layer);
       await fs.mkdir(layerDir, { recursive: true });
       const layerIndex = path.join(layerDir, "index.md");
       try {
@@ -109,12 +109,12 @@ program
       }
     }
 
-    console.log(chalk.green(`Initialized ${boardyDir} with ${layers.length} layers: ${layers.join(", ")}`));
+    console.log(chalk.green(`Initialized ${boardryDir} with ${layers.length} layers: ${layers.join(", ")}`));
   });
 
 program
   .command("index")
-  .description("rebuild the graph index in .boardy/.index/")
+  .description("rebuild the graph index in .boardry/.index/")
   .option("-w, --watch", "re-index as files change")
   .action(async (opts: { watch?: boolean }) => {
     const loaded = await loadOrFail();
@@ -196,7 +196,7 @@ program
 
 program
   .command("qa [question]")
-  .description("look up a verified answer in .boardy/questions/")
+  .description("look up a verified answer in .boardry/questions/")
   .option("--list", "list every question in the index")
   .option("--verify", "run every check and report pass/fail")
   .option("--bench <file>", "run a labeled benchmark file")
@@ -270,7 +270,7 @@ program
       const match = matchQa(entries, question);
       if (!match) {
         console.log(
-          chalk.yellow("Not in the verified index. Use `boardy context` for an unverified answer."),
+          chalk.yellow("Not in the verified index. Use `boardry context` for an unverified answer."),
         );
         return;
       }
@@ -426,7 +426,7 @@ program
   .requiredOption("-l, --layer <layer>", "layer name")
   .option("-t, --title <title>", "note title")
   .action(async (opts: { layer: string; title?: string }) => {
-    const dir = await boardyDirOrFail();
+    const dir = await boardryDirOrFail();
     const title = opts.title ?? "Untitled";
     const id = slugify(title);
     const target = path.join(dir, opts.layer, `${id}.md`);
@@ -440,7 +440,7 @@ program
   .description("add a note from text on stdin")
   .requiredOption("-l, --layer <layer>", "layer name")
   .action(async (title: string, opts: { layer: string }) => {
-    const dir = await boardyDirOrFail();
+    const dir = await boardryDirOrFail();
     const body = await readStdin();
     const id = slugify(title);
     const target = path.join(dir, opts.layer, `${id}.md`);
@@ -535,7 +535,7 @@ program
 
 program
   .command("sync")
-  .description("link .boardy notes to an OpenWiki folder and report drift")
+  .description("link .boardry notes to an OpenWiki folder and report drift")
   .option("--openwiki <dir>", "path to the openwiki/ folder")
   .action(async (opts: { openwiki?: string }) => {
     const loaded = await loadOrFail();
@@ -626,7 +626,7 @@ const VIEWER_HTML = `<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>boardy viewer</title>
+<title>boardry viewer</title>
 <style>
   body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 70rem; color: #1a1a1a; }
   h1 { font-size: 1.4rem; }
@@ -637,7 +637,7 @@ const VIEWER_HTML = `<!doctype html>
 </style>
 </head>
 <body>
-<h1>boardy</h1>
+<h1>boardry</h1>
 <div id="app"></div>
 <script>
 fetch('data.json').then(function (r) { return r.json(); }).then(function (d) {
@@ -673,7 +673,7 @@ fetch('data.json').then(function (r) { return r.json(); }).then(function (d) {
 </html>`;
 
 for (const command of program.commands) {
-  command.option("--path <dir>", "boardy folder to use (default: .boardy)");
+  command.option("--path <dir>", "boardry folder to use (default: .boardry)");
 }
 
 program.parseAsync(process.argv);

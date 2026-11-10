@@ -1,6 +1,6 @@
 import { ActionIcon, Group, Stack, Text } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight, IconPlus, IconX } from "@tabler/icons-react";
-import type { Note } from "@boardy/core";
+import type { Note } from "@boardry/core";
 import type { Project } from "./projects";
 
 export function ProjectSidebar({
@@ -27,7 +27,7 @@ export function ProjectSidebar({
   if (collapsed) {
     return (
       <aside
-        className="boardy-sidebar"
+        className="boardry-sidebar"
         style={{
           width: 36,
           flexShrink: 0,
@@ -46,7 +46,7 @@ export function ProjectSidebar({
 
   return (
     <aside
-      className="boardy-sidebar"
+      className="boardry-sidebar"
       style={{
         width: 220,
         flexShrink: 0,

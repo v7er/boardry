@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Drawer, Group, Loader, ScrollArea, Stack, Text, Textarea } from "@mantine/core";
-import { buildRagContext, type BuildResult } from "@boardy/core";
+import { buildRagContext, type BuildResult } from "@boardry/core";
 import { chat, type AiSettings, type ChatMessage } from "./ai";
 
 interface UiMessage {
@@ -48,7 +48,7 @@ export function ChatBox({
         {
           role: "system",
           content:
-            "You are the assistant inside boardy Studio. Answer only from the project notes below, and cite the note id in square brackets for each claim, for example [modules/play-runtime]. If the notes do not cover it, say so. Be concise.",
+            "You are the assistant inside boardry Studio. Answer only from the project notes below, and cite the note id in square brackets for each claim, for example [modules/play-runtime]. If the notes do not cover it, say so. Be concise.",
         },
         ...(context?.text
           ? [{ role: "system" as const, content: `Relevant notes:\n\n${context.text}` }]

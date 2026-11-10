@@ -13,7 +13,7 @@ export interface NoteEvidence {
   line: number;
 }
 
-export type NoteSource = "boardy" | "openwiki";
+export type NoteSource = "boardry" | "openwiki";
 
 export interface Note {
   id: string;
