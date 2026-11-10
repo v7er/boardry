@@ -46,6 +46,17 @@ export function App() {
         <div className="foot">The document centre for your product.</div>
       </aside>
       <main className="content">
+        <div className="install">
+          <span className="install-label">Install</span>
+          <code>npm i -g @boardry/cli</code>
+          <a
+            href="https://www.npmjs.com/package/@boardry/cli"
+            target="_blank"
+            rel="noreferrer"
+          >
+            npm
+          </a>
+        </div>
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{doc.content}</ReactMarkdown>
       </main>
     </div>

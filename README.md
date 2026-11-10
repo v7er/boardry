@@ -8,27 +8,39 @@ boardry keeps everything you know about a product in one folder, `.boardry/`, as
 
 This repo ships a populated `.boardry/` that documents boardry itself: 13 notes across the brief, components, prototypes, modules, technical, and whitelist layers.
 
-## Setup
+## Install
 
-Requirements: Node.js 22 or newer and pnpm. For Studio, also Rust (cargo) and the Tauri prerequisites for your operating system.
+boardry is published to npm under the `@boardry` scope:
+
+- [`@boardry/cli`](https://www.npmjs.com/package/@boardry/cli) - the `boardry` command.
+- [`@boardry/core`](https://www.npmjs.com/package/@boardry/core) - the parser, graph, and search engine it runs on.
+
+Requires Node.js 22 or newer. Install the CLI globally:
 
 ```bash
-pnpm install
-pnpm run build
+npm install -g @boardry/cli
+```
+
+Or run it without installing:
+
+```bash
+npx @boardry/cli index
+```
+
+## Quick start
+
+```bash
+boardry init                              # create .boardry/ with index.md
+boardry index                             # build the graph index
+boardry ask "how do refunds work"         # ranked notes and their links
 ```
 
 ## Using the CLI
 
 ```bash
-node packages/cli/dist/index.js index            # build .boardry/.index/
-node packages/cli/dist/index.js ask "how do refunds work"
-node packages/cli/dist/index.js check
-```
-
-Or through pnpm from the repo root:
-
-```bash
-pnpm run cli index
+boardry index
+boardry ask "how do refunds work"
+boardry check
 ```
 
 Common commands:
@@ -61,15 +73,35 @@ A note with `type: brainstorming` is free text for a human, ignored by the graph
 
 ## Using Studio
 
-Studio is the desktop app for the same folder:
+Studio is the desktop app for the same folder. It is private and not published to npm:
 
 ```bash
-pnpm --filter @boardry/studio run tauri dev
+cd apps/studio
+npm run tauri dev
 ```
 
 Open the project root (which contains `.boardry/`) or the `.boardry/` folder itself. Studio finds `.boardry/index.md` either way and draws the graph. Press Cmd-K to search, click a node to edit its note.
 
 See [docs/STUDIO.md](./docs/STUDIO.md) for the feature list.
+
+## Development
+
+This repo is a pnpm monorepo. Requires pnpm, plus Rust and the Tauri prerequisites for Studio.
+
+```bash
+pnpm install
+pnpm run build
+```
+
+## Publishing
+
+Both packages publish to npm under the `@boardry` scope. Build first, then publish core before the CLI (the CLI depends on it):
+
+```bash
+npm run publish:packages
+```
+
+Each package also runs its build from `prepublishOnly`, so `npm publish` alone builds before it uploads. Studio and the site stay private.
 
 ## Docs
 

@@ -6,6 +6,20 @@ The `boardry` command line. Everything the CLI does, and the packages it uses.
 
 A single Node CLI, `boardry`, that reads and writes the `.boardry/` folder. It shares the core with Studio, so the CLI and the app never disagree about how a note is parsed or how a link is typed.
 
+## Install
+
+Published to npm as `@boardry/cli`, which installs the `boardry` command. Requires Node.js 22 or newer.
+
+```bash
+npm install -g @boardry/cli
+```
+
+Or run it without installing:
+
+```bash
+npx @boardry/cli index
+```
+
 ## Features
 
 ### Query

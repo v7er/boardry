@@ -6,7 +6,10 @@
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck",
-    "cli": "node packages/cli/dist/index.js"
+    "cli": "node packages/cli/dist/index.js",
+    "publish:core": "npm publish ./packages/core",
+    "publish:cli": "npm publish ./packages/cli",
+    "publish:packages": "npm run publish:core && npm run publish:cli"
   },
   "engines": {
     "node": ">=22"

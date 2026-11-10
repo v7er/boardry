@@ -1,5 +1,5 @@
 {
-  "name": "boardry",
+  "name": "@boardry/cli",
   "version": "0.1.0",
   "description": "The boardry CLI: the document centre for your product.",
   "license": "MIT",
@@ -37,5 +37,6 @@
   "devDependencies": {
     "@types/node": "^22.10.1",
     "typescript": "^5.7.2"
-  }
+  },
+  "prepublishOnly": "npm run build"
 }
